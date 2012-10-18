@@ -53,8 +53,6 @@ import org.bouncycastle.asn1.x509.X509Name;
 import org.bouncycastle.jce.PKCS10CertificationRequest;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.x509.X509V3CertificateGenerator;
-import org.glite.security.util.FileCertReader;
-import org.glite.security.util.PrivateKeyReader;
 
 /**
  * Generate a proxy certificate.

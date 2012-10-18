@@ -17,16 +17,16 @@
 
 package org.glite.security.delegation;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.StringReader;
-import java.io.StringWriter;
 import java.security.cert.X509Certificate;
 
 import org.apache.log4j.Logger;
 import org.bouncycastle.jce.PKCS10CertificationRequest;
 import org.bouncycastle.openssl.PEMReader;
-import org.bouncycastle.openssl.PEMWriter;
-
+import eu.emi.security.authn.x509.impl.CertificateUtils;
+import eu.emi.security.authn.x509.impl.CertificateUtils.Encoding;
 import eu.emi.security.authn.x509.impl.PEMCredential;
 import eu.emi.security.authn.x509.impl.X500NameUtils;
 import eu.emi.security.authn.x509.proxy.ProxyGenerator;
@@ -102,15 +102,11 @@ public class DelegationHandler {
             
             X509Certificate[] proxy = ProxyGenerator.generate(options, pemCredential.getKey());
             
+            ByteArrayOutputStream stream = new ByteArrayOutputStream();
             
-            StringWriter writer = new StringWriter();
-            PEMWriter pemWriter = new PEMWriter(writer);
-            for(X509Certificate cert:proxy){
-                pemWriter.writeObject(cert);
-            }
-            pemWriter.flush();
+            CertificateUtils.saveCertificateChain(stream, proxy, Encoding.PEM);
             
-            strX509CertChain = pemWriter.toString();
+            strX509CertChain = stream.toString();
         } catch (Exception e) {
             LOGGER.error("Proxy generation failed: " + e);
             throw e;

@@ -28,7 +28,6 @@ import javax.naming.NamingException;
 import javax.sql.DataSource;
 
 import org.apache.log4j.Logger;
-import org.glite.security.util.DNHandler;
 import org.glite.security.delegation.GrDPX509Util;
 import org.glite.security.delegation.GrDProxyDlgeeOptions;
 
@@ -244,13 +243,13 @@ public class GrDPStorageDatabase implements GrDPStorage {
 		
 			p_stat = conn.prepareStatement(sql);
 			p_stat.setString(1, delegationID);
-			p_stat.setString(2, DNHandler.getDNRFC2253(dn).getX500());
+			p_stat.setString(2, dn);
 			
 			rs = p_stat.executeQuery();
 			if(rs.next()) {
 				elem = new GrDPStorageCacheElement();
 				elem.setDelegationID(rs.getString("dlg_id"));
-				elem.setDNasX500(rs.getString("dn"));
+				elem.setDN(rs.getString("dn"));
 				elem.setCertificateRequest(rs.getString("cert_request"));
 				elem.setVomsAttributes(GrDPX509Util.fromStringVOMSAttrs(rs.getString("voms_attrs")));
 				elem.setPrivateKey(rs.getString("priv_key"));
@@ -291,7 +290,7 @@ public class GrDPStorageDatabase implements GrDPStorage {
 	
 			p_stat = conn.prepareStatement(sql);
 			p_stat.setString(1, delegationID);
-			p_stat.setString(2, DNHandler.getDNRFC2253(dn).getX500());
+			p_stat.setString(2, dn);
 			
 			p_stat.executeUpdate();
 			
@@ -421,13 +420,13 @@ public class GrDPStorageDatabase implements GrDPStorage {
 		
 			p_stat = conn.prepareStatement(sql);
 			p_stat.setString(1, delegationID);
-			p_stat.setString(2, DNHandler.getDNRFC2253(dn).getX500());
+			p_stat.setString(2, dn);
 			
 			rs = p_stat.executeQuery();
 			if(rs.next()) {
 				elem = new GrDPStorageElement();
 				elem.setDelegationID(rs.getString("dlg_id"));
-				elem.setDNasX500(rs.getString("dn"));
+				elem.setDN(rs.getString("dn"));
 				elem.setCertificate(rs.getString("proxy"));
 				elem.setVomsAttributes(GrDPX509Util.fromStringVOMSAttrs(rs.getString("voms_attrs")));
                 elem.setTerminationTime(rs.getTimestamp("termination_time"));
@@ -468,7 +467,7 @@ public class GrDPStorageDatabase implements GrDPStorage {
 	
 			p_stat = conn.prepareStatement(sql);
 			p_stat.setString(1, delegationID);
-			p_stat.setString(2, DNHandler.getDNRFC2253(dn).getX500());
+			p_stat.setString(2, dn);
 			
 			p_stat.executeUpdate();
 			

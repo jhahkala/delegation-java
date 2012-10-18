@@ -18,7 +18,8 @@
 package org.glite.security.delegation.storage;
 
 import java.util.Date;
-import org.glite.security.util.DNHandler;
+
+import eu.emi.security.authn.x509.impl.OpensslNameUtils;
 
 /**
  * Representation of a delegated proxy entry in storage.
@@ -66,9 +67,10 @@ public class GrDPStorageElement {
      * Retrieves the dn of the owner of the delegated proxy in X500 format.
      * 
      * @return The DN in X500 format.
+     * @deprecated use the rfc 2253 dns
      */
     public String getDNasX500() {
-        return DNHandler.getDNRFC2253(this.DN).getX500();
+        return OpensslNameUtils.convertFromRfc2253(this.DN, true);
     }
 	
 	/**
@@ -116,15 +118,6 @@ public class GrDPStorageElement {
 		this.DN = dn;
 	}
     
-    /**
-     * Set the DN associated of the owner of the delegated proxy from X500 format.
-     * 
-     * @param dn    The DN in X500 format.
-     */
-    public void setDNasX500(String dn) {
-        this.DN = DNHandler.getDNRFC2253(dn).getRFCDN();
-    }
-	
 	/**
 	 * Sets the list of voms attributes inside the delegated proxy.
 	 *

@@ -18,13 +18,17 @@
 package org.glite.security.delegation.impl;
 
 import java.io.BufferedInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.StringBufferInputStream;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
-import java.security.cert.CertificateException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateExpiredException;
 import java.security.cert.CertificateNotYetValidException;
 import java.security.cert.X509Certificate;
@@ -34,9 +38,7 @@ import org.apache.log4j.Logger;
 import org.bouncycastle.jce.PKCS10CertificationRequest;
 import org.bouncycastle.openssl.PEMReader;
 import org.bouncycastle.openssl.PEMWriter;
-import org.glite.security.SecurityContext;
 import org.glite.security.delegation.CertInfoTuple;
-import org.glite.security.delegation.GrDPConstants;
 import org.glite.security.delegation.GrDPX509Util;
 import org.glite.security.delegation.GrDProxyDlgeeOptions;
 import org.glite.security.delegation.DelegationException;
@@ -46,18 +48,18 @@ import org.glite.security.delegation.storage.GrDPStorageCacheElement;
 import org.glite.security.delegation.storage.GrDPStorageElement;
 import org.glite.security.delegation.storage.GrDPStorageException;
 import org.glite.security.delegation.storage.GrDPStorageFactory;
-import org.glite.security.util.CertUtil;
-import org.glite.security.util.DN;
-import org.glite.security.util.DNHandler;
-import org.glite.security.util.FileCertReader;
-import org.glite.security.util.PrivateKeyReader;
-import org.glite.security.util.axis.InitSecurityContext;
 
+import eu.emi.security.authn.x509.impl.CertificateUtils;
+import eu.emi.security.authn.x509.impl.CertificateUtils.Encoding;
+import eu.emi.security.authn.x509.impl.KeyAndCertCredential;
 import eu.emi.security.authn.x509.impl.X500NameUtils;
-import eu.emi.security.authn.x509.proxy.ProxyUtils;
+import eu.emi.security.authn.x509.proxy.ProxyCSR;
+import eu.emi.security.authn.x509.proxy.ProxyCSRGenerator;
+import eu.emi.security.authn.x509.proxy.ProxyCertificateOptions;
 
 /**
- * Implementation of the logic of the Glite Delegation Interface on the server side.
+ * Implementation of the logic of the Glite Delegation Interface on the server
+ * side.
  * 
  * @author Ricardo Rocha <Ricardo.Rocha@cern.ch>
  * @author Akos Frohner <Akos.Frohner@cern.ch>
@@ -69,11 +71,17 @@ public class GliteDelegation {
     /** Local logger object. */
     private static Logger logger = Logger.getLogger(GliteDelegation.class);
 
-    /** The default key size to be used. Can be overwritten by setting the
-    * dlgeeKeySize property in the dlgee.properties file if the value there is bigger. */
+    /**
+     * The default key size to be used. Can be overwritten by setting the
+     * dlgeeKeySize property in the dlgee.properties file if the value there is
+     * bigger.
+     */
     private int DEFAULT_KEY_SIZE = 1024;
 
-   /** Set at instantiation time. Remains false if a bad configuration set was found. */
+    /**
+     * Set at instantiation time. Remains false if a bad configuration set was
+     * found.
+     */
     private boolean m_bad_config = false;
 
     /** Local object interfacing the storage area. */
@@ -81,12 +89,16 @@ public class GliteDelegation {
 
     /** Key size being used. */
     private int m_keySize;
-    
-    /** whether the presence of voms attributes will be required in the incoming certificate chains. */
-    public static boolean requireVomsAttrs = true;
-    
+
     /**
-     * Loads the DLGEE properties from the default config file and calls the appropriate constructor.
+     * whether the presence of voms attributes will be required in the incoming
+     * certificate chains.
+     */
+    public static boolean requireVomsAttrs = true;
+
+    /**
+     * Loads the DLGEE properties from the default config file and calls the
+     * appropriate constructor.
      * 
      * @throws IOException Failed to load the DLGEE config file
      * @see #GliteDelegation(GrDProxyDlgeeOptions)
@@ -98,15 +110,17 @@ public class GliteDelegation {
     /**
      * Class constructor.
      * 
-     * Creates a new storage handler instance (implementation depending on configuration) to be used later.
+     * Creates a new storage handler instance (implementation depending on
+     * configuration) to be used later.
      * 
      * Sets the value of the key size as defined in the configuration.
      * 
-     * @param dlgeeOpt the options object for configuring the delegation receiver.
+     * @param dlgeeOpt the options object for configuring the delegation
+     *            receiver.
      */
     public GliteDelegation(GrDProxyDlgeeOptions dlgeeOpt) {
 
-//        this.m_dlgeeOpt = dlgeeOpt;
+        // this.m_dlgeeOpt = dlgeeOpt;
         if (logger.isDebugEnabled()) {
             logger.debug("Using DLGEE properties: " + "DN: " + dlgeeOpt.getDlgeeDN() + ". Pass: <hidden>. proxyFile: "
                     + dlgeeOpt.getDlgeeProxyFile() + ". " + "delegationStorageFactory: "
@@ -114,8 +128,7 @@ public class GliteDelegation {
         }
         // Get a GrDStorage instance
         try {
-            GrDPStorageFactory stgFactory = GrDPX509Util.getGrDPStorageFactory(dlgeeOpt
-                            .getDlgeeStorageFactory());
+            GrDPStorageFactory stgFactory = GrDPX509Util.getGrDPStorageFactory(dlgeeOpt.getDlgeeStorageFactory());
 
             m_storage = stgFactory.createGrDPStorage(dlgeeOpt);
         } catch (Exception e) {
@@ -124,7 +137,8 @@ public class GliteDelegation {
             return;
         }
 
-        // Set the size of the key, if not defined or smaller than the default, use default.
+        // Set the size of the key, if not defined or smaller than the default,
+        // use default.
         m_keySize = dlgeeOpt.getDlgeeKeySize();
         if (m_keySize == -1 || m_keySize < DEFAULT_KEY_SIZE) {
             m_keySize = DEFAULT_KEY_SIZE;
@@ -132,8 +146,9 @@ public class GliteDelegation {
     }
 
     /**
-     * Generates a new proxy certificate proxy request based on the client DN and voms attributes in SecurityContext.
-     * Also checks if the request with given (or generated if not given) id already exists.
+     * Generates a new proxy certificate proxy request based on the client DN
+     * and voms attributes in SecurityContext. Also checks if the request with
+     * given (or generated if not given) id already exists.
      * 
      * @param inDelegationID The delegation id used.
      * @return The generated Proxy request in PEM encoding.
@@ -154,7 +169,7 @@ public class GliteDelegation {
 
         CertInfoTuple info = new CertInfoTuple(certs, requireVomsAttrs);
 
-        logger.debug("Got proxy delegation request from client '" + info.dn + "', getting VOMS attributes.");
+        logger.debug("Got get proxy req request from client '" + info.dn + "', getting VOMS attributes.");
 
         // Generate a delegation id from the client DN and VOMS attributes
         if (delegationID == null || delegationID.length() == 0) {
@@ -175,23 +190,23 @@ public class GliteDelegation {
         // Throw error in case there was already a credential with the given id
         if (elem != null) {
             String vomsAttrsStr = GrDPX509Util.toStringVOMSAttrs(info.vomsAttributes);
-            logger.debug("Delegation ID '" + delegationID + "' already exists" + " for client (DN='"
-                            + info.dn + "; VOMS ATTRS='" + vomsAttrsStr
-                            + "'). Call renewProxyReq.");
-            throw new DelegationException("Delegation ID '" + delegationID + "' already exists"
-                            + " for client (DN='" + info.dn + "; VOMS ATTRS='" + vomsAttrsStr
-                            + "'). Call renewProxyReq.");
+            logger.debug("Delegation ID '" + delegationID + "' already exists" + " for client (DN='" + info.dn
+                    + "; VOMS ATTRS='" + vomsAttrsStr + "'). Call renewProxyReq.");
+            throw new DelegationException("Delegation ID '" + delegationID + "' already exists" + " for client (DN='"
+                    + info.dn + "; VOMS ATTRS='" + vomsAttrsStr + "'). Call renewProxyReq.");
         }
 
         // Create and store the new certificate request
-        return createAndStoreCertificateRequest(info.endEntityCert, delegationID, info.dn, info.vomsAttributes);
+        return createAndStoreCertificateRequest(certs, delegationID, info.dn, info.vomsAttributes);
     }
 
     /**
-     * Generates a new proxy request object based on the DN and voms attributes in the security context.
-     * Also checks if the request with given (or generated if not given) id already exists.
+     * Generates a new proxy request object based on the DN and voms attributes
+     * in the security context. Also checks if the request with given (or
+     * generated if not given) id already exists.
      * 
-     * @param inDelegationID the delegation id to use, will be generated if not given.
+     * @param inDelegationID the delegation id to use, will be generated if not
+     *            given.
      * @return The newProxyReq object.
      * @throws DelegationException thrown in case of failure.
      */
@@ -199,7 +214,7 @@ public class GliteDelegation {
         logger.debug("Processing getNewProxyReq.");
 
         String delegationID = inDelegationID;
-        
+
         GrDPStorageElement elem = null;
 
         // Check if a bad configuration was detected on launch (and fail if
@@ -212,7 +227,6 @@ public class GliteDelegation {
         CertInfoTuple info = new CertInfoTuple(certs, requireVomsAttrs);
 
         logger.debug("Got get new proxy req request from client '" + info.dn + "'");
-
 
         // Generate a delegation id from the client DN and VOMS attributes
         if (delegationID == null || delegationID.length() == 0) {
@@ -231,16 +245,15 @@ public class GliteDelegation {
         // Throw error in case there was already a credential with the given id
         if (elem != null) {
             String vomsAttrsStr = GrDPX509Util.toStringVOMSAttrs(info.vomsAttributes);
-            String errorMsg = "Delegation ID '" + delegationID + "' already exists"
-            + " for client (DN='" + info.dn + "; VOMS ATTRS='" + vomsAttrsStr
-            + "'). Call renewProxyReq.";
-            
+            String errorMsg = "Delegation ID '" + delegationID + "' already exists" + " for client (DN='" + info.dn
+                    + "; VOMS ATTRS='" + vomsAttrsStr + "'). Call renewProxyReq.";
+
             logger.debug(errorMsg);
             throw new DelegationException(errorMsg);
         }
 
         // Create and store the new certificate request
-        String certRequest = createAndStoreCertificateRequest(info.endEntityCert, delegationID, info.dn, info.vomsAttributes);
+        String certRequest = createAndStoreCertificateRequest(certs, delegationID, info.dn, info.vomsAttributes);
 
         // Create and return the proxy request object
         NewProxyReq newProxyReq = new NewProxyReq();
@@ -251,15 +264,17 @@ public class GliteDelegation {
     }
 
     /**
-     * Generates a new delegation request for the existing delegation with the given (or generated) delegation. 
+     * Generates a new delegation request for the existing delegation with the
+     * given (or generated) delegation.
      * 
-     * @param inDelegationID The delegation id to use, will be genarated if not given.
+     * @param inDelegationID The delegation id to use, will be genarated if not
+     *            given.
      * @return The delegation request in PEM format.
      * @throws DelegationException Thrown in case of failure.
      */
     public String renewProxyReq(String inDelegationID, X509Certificate certs[]) throws DelegationException {
         logger.debug("Processing renewProxyReq.");
-        
+
         String delegationID = inDelegationID;
 
         GrDPStorageElement elem = null;
@@ -292,11 +307,11 @@ public class GliteDelegation {
         // Check that the DLG ID had a corresponding delegated credential
         if (elem == null) {
             logger.debug("Failed to renew credential as there was no delegation with ID '" + delegationID
-                            + "' for client '" + info.dn + "'");
+                    + "' for client '" + info.dn + "'");
         }
 
         // Create and store the new certificate request
-        return createAndStoreCertificateRequest(info.endEntityCert, delegationID, info.dn, info.vomsAttributes);
+        return createAndStoreCertificateRequest(certs, delegationID, info.dn, info.vomsAttributes);
     }
 
     /**
@@ -306,7 +321,7 @@ public class GliteDelegation {
      */
     public void putProxy(String inDelegationID, String proxy, X509Certificate certs[]) throws DelegationException {
         logger.info("Processing putProxy.");
-        
+
         String delegationID = inDelegationID;
 
         // Check if a bad configuration was detected on launch (and fail if
@@ -325,15 +340,16 @@ public class GliteDelegation {
         CertInfoTuple info = new CertInfoTuple(certs, requireVomsAttrs);
 
         logger.debug("Got put proxy request from client '" + info.dn + "'");
-        
+
         // Load given proxy
         X509Certificate[] proxyCertChain;
-		try {
-			proxyCertChain = s_reader.readCertChain(new BufferedInputStream(new StringBufferInputStream(proxy))).toArray(new X509Certificate[]{});
-		} catch (IOException e2) {
+        try {
+            proxyCertChain = CertificateUtils.loadCertificateChain(new BufferedInputStream(new StringBufferInputStream(
+                    proxy)), Encoding.PEM);
+        } catch (IOException e2) {
             logger.error("Failed to load proxy certificate chain: " + e2.getMessage());
             throw new DelegationException("Failed to load proxy certificate chain: " + e2.getMessage());
-		}
+        }
         if (proxyCertChain == null || proxyCertChain.length == 0) {
             logger.error("Failed to load proxy certificate chain - chain was null or size 0.");
             throw new DelegationException("Failed to load proxy certificate chain.");
@@ -353,56 +369,45 @@ public class GliteDelegation {
                         + proxyCertChain[0].getNotBefore());
             }
         }
-        
-        // Get the given proxy information
-        String proxySubjectDN = DNHandler.getSubject(proxyCertChain[0]).getRFCDN();
-        String proxyIssuerDN = DNHandler.getIssuer(proxyCertChain[0]).getRFCDN();
-		if (logger.isDebugEnabled()) {
-			logger.debug("Proxy Subject DN: " + proxySubjectDN);
-			logger.debug("Proxy Issuer DN: " + proxyIssuerDN);
-			logger.debug("Proxy Public key:" + proxyCertChain[0].getPublicKey());
-			logger.debug("chain length is: " + proxyCertChain.length);
-			logger.debug("last cert is:" + proxyCertChain[proxyCertChain.length - 1]);
 
-			for (int n = 0; n < proxyCertChain.length; n++) {
-				logger.debug("cert [" + n + "] is from " + DNHandler.getSubject(proxyCertChain[n]).getRFCDN());
-			}
-		}
+        // Get the given proxy information
+        String proxySubjectDN = X500NameUtils.getReadableForm(proxyCertChain[0].getSubjectX500Principal());
+        String proxyIssuerDN = X500NameUtils.getReadableForm(proxyCertChain[0].getIssuerX500Principal());
+        if (logger.isDebugEnabled()) {
+            logger.debug("Proxy Subject DN: " + proxySubjectDN);
+            logger.debug("Proxy Issuer DN: " + proxyIssuerDN);
+            logger.debug("Proxy Public key:" + proxyCertChain[0].getPublicKey());
+            logger.debug("chain length is: " + proxyCertChain.length);
+            logger.debug("last cert is:" + proxyCertChain[proxyCertChain.length - 1]);
+
+            for (int n = 0; n < proxyCertChain.length; n++) {
+                logger.debug("cert [" + n + "] is from "
+                        + X500NameUtils.getReadableForm(proxyCertChain[n].getSubjectX500Principal()));
+            }
+        }
 
         if (proxySubjectDN == null || proxyIssuerDN == null) {
             logger.error("Failed to get DN (subject or issuer) out of proxy. It came null");
             throw new DelegationException("Failed to get DN (subject or issuer) out of proxy.");
         }
-        String clientDN = null;
-        
-        // Get client information from security context
-        try{
-            clientDN = CertUtil.getUserDN(sc.getClientCertChain()).getRFCDN();
-        }catch(IOException e){
-            throw new DelegationException("No user certificate found in the proxy chain: " + e.getMessage());
-        }
-        if (clientDN == null) {
-            logger.error("Failed to get client DN. It came null");
-            throw new DelegationException("Failed to get client DN.");
-        }
-        logger.debug("Client DN: " + clientDN);
 
-        // Get the client VOMS attributes (for the DLG ID)
-        String[] clientVOMSAttributes = GrDPX509Util.getVOMSAttributes(sc);
-        
+        logger.debug("Client DN: " + info.dn);
+
         // Get a delegation ID for the given proxy (or take the specified one if
         // given)
-        // TODO: Should the dlg id here be generated from the client or the proxy info?
-        // Also, should the client and proxy VOMS attributes be checked for a match?
+        // TODO: Should the dlg id here be generated from the client or the
+        // proxy info?
+        // Also, should the client and proxy VOMS attributes be checked for a
+        // match?
         if (delegationID == null || delegationID.length() == 0) {
-            delegationID = GrDPX509Util.genDlgID(clientDN, clientVOMSAttributes);
+            delegationID = GrDPX509Util.genDlgID(info.dn, info.vomsAttributes);
         }
         logger.debug("Delegation ID is '" + delegationID + "'");
 
         // Check that the client is the issuer of the given proxy
         // TODO: more strict check
-        if (!proxyIssuerDN.endsWith(clientDN)) {
-            String message = "Client '" + clientDN + "' is not issuer of proxy '" + proxyIssuerDN + "'.";
+        if (!proxyIssuerDN.endsWith(info.dn)) {
+            String message = "Client '" + info.dn + "' is not issuer of proxy '" + proxyIssuerDN + "'.";
             logger.error(message);
             throw new DelegationException(message);
         }
@@ -419,7 +424,7 @@ public class GliteDelegation {
         // Get the cache entry for this delegation ID
         GrDPStorageCacheElement cacheElem = null;
         try {
-            cacheElem = m_storage.findGrDPStorageCacheElement(cacheID, clientDN);
+            cacheElem = m_storage.findGrDPStorageCacheElement(cacheID, info.dn);
         } catch (GrDPStorageException e) {
             logger.error("Failed to get certificate request information from storage.", e);
             throw new DelegationException("Internal failure.");
@@ -427,23 +432,23 @@ public class GliteDelegation {
 
         // Check if the delegation request existed
         if (cacheElem == null) {
-            logger.info("Could not find cache ID '" + cacheID + "' for DN '" + clientDN
-                            + "' in cache.");
+            logger.info("Could not find cache ID '" + cacheID + "' for DN '" + info.dn + "' in cache.");
             throw new DelegationException("Could not find a proper delegation request");
         }
-        logger.debug("Got from cache element for cache ID '" + cacheID + "' and DN '" + clientDN + "'");
+        logger.debug("Got from cache element for cache ID '" + cacheID + "' and DN '" + info.dn + "'");
 
-        // the public key of the cached certificate request has to 
+        // the public key of the cached certificate request has to
         // match the public key of the proxy certificate, otherwise
         // this is an answer to a different request
         PEMReader pemReader = new PEMReader(new StringReader(cacheElem.getCertificateRequest()));
         PKCS10CertificationRequest req;
-		try {
-			req = (PKCS10CertificationRequest)pemReader.readObject();
-		} catch (IOException e1) {
+        try {
+            req = (PKCS10CertificationRequest) pemReader.readObject();
+        } catch (IOException e1) {
             logger.error("Could not load the original certificate request from cache.");
-            throw new DelegationException("Could not load the original certificate request from cache: " + e1.getMessage());
-		}
+            throw new DelegationException("Could not load the original certificate request from cache: "
+                    + e1.getMessage());
+        }
         if (req == null) {
             logger.error("Could not load the original certificate request from cache.");
             throw new DelegationException("Could not load the original certificate request from cache.");
@@ -460,17 +465,40 @@ public class GliteDelegation {
             throw new DelegationException("Error while decoding the certificate request.");
         }
 
-        // Add the private key to the proxy certificate chain and check it was ok
-        String completeProxy = getProxyWithPrivateKey(proxyCertChain, cacheElem.getPrivateKey());
-        if(completeProxy == null) {
+        // Add the private key to the proxy certificate chain and check it was
+        // ok
+        StringBufferInputStream keyStream = new StringBufferInputStream(cacheElem.getPrivateKey());
+        PrivateKey privateKey;
+        try {
+            privateKey = CertificateUtils.loadPrivateKey(keyStream, Encoding.PEM, null);
+        } catch (IOException e) {
+            throw new DelegationException("Failed to read private key from storage, error: " + e.getClass() + ": " + e.getMessage());
+        }
+        KeyAndCertCredential credential;
+        try {
+            credential = new KeyAndCertCredential(privateKey, proxyCertChain);
+        } catch (KeyStoreException e) {
+            throw new DelegationException("Failed to handle credentials, error: " + e.getClass() + ": " + e.getMessage());
+        }
+        
+        ByteArrayOutputStream proxyStream = new ByteArrayOutputStream();
+        try {
+            CertificateUtils.savePEMKeystore(proxyStream, credential.getKeyStore(), credential.getKeyAlias(), null, null, null);
+        } catch (Exception e) {
+            throw new DelegationException("Error while converting the proxy to string for storage: " + e.getClass() + ": " + e.getMessage());
+        } 
+        
+        String completeProxy = proxyStream.toString();
+        
+        if (completeProxy == null) {
             logger.error("Failed to add private key to the proxy certificate chain.");
             throw new DelegationException("Could not properly process given proxy.");
         }
-        
+
         // Save the proxy in proxy storage (copying the rest from the info taken
         // from the cache)
         try {
-            GrDPStorageElement elem = m_storage.findGrDPStorageElement(delegationID, clientDN);
+            GrDPStorageElement elem = m_storage.findGrDPStorageElement(delegationID, info.dn);
             if (elem != null) {
                 elem.setCertificate(completeProxy);
                 elem.setTerminationTime(proxyCertChain[0].getNotAfter());
@@ -478,8 +506,8 @@ public class GliteDelegation {
             } else {
                 elem = new GrDPStorageElement();
                 elem.setDelegationID(delegationID);
-                elem.setDN(clientDN);
-                elem.setVomsAttributes(clientVOMSAttributes);
+                elem.setDN(info.dn);
+                elem.setVomsAttributes(info.vomsAttributes);
                 elem.setCertificate(completeProxy);
                 elem.setTerminationTime(proxyCertChain[0].getNotAfter());
                 m_storage.insertGrDPStorageElement(elem);
@@ -492,7 +520,7 @@ public class GliteDelegation {
 
         // Remove the credential from storage cache
         try {
-            m_storage.deleteGrDPStorageCacheElement(cacheID, clientDN);
+            m_storage.deleteGrDPStorageCacheElement(cacheID, info.dn);
         } catch (GrDPStorageException e) {
             logger.warn("Failed to remove credential from storage cache.");
         }
@@ -503,7 +531,7 @@ public class GliteDelegation {
         logger.debug("Processing destroy.");
 
         String delegationID = inDelegationID;
-        
+
         GrDPStorageElement elem = null;
 
         // Check if a bad configuration was detected on launch (and fail if
@@ -513,43 +541,19 @@ public class GliteDelegation {
             throw new DelegationException("Service is misconfigured.");
         }
 
-        // Init Security Context
-        InitSecurityContext.init();
-
-        // Get security context
-        SecurityContext sc = SecurityContext.getCurrentContext();
-        if (sc == null) {
-            logger.debug("Failed to get SecurityContext.");
-            throw new DelegationException("Failed to get client security information.");
-        }
-
-        String clientDN = null;
-        
-        // Get client information
-        try{
-            clientDN = CertUtil.getUserDN(sc.getClientCertChain()).getRFCDN();
-        }catch(IOException e){
-            throw new DelegationException("No user certificate found in the proxy chain: " + e.getMessage());
-        }
-        if (clientDN == null) {
-            logger.error("Failed to get client DN. It came null");
-            throw new DelegationException("Failed to get client DN.");
-        }
-        logger.debug("Got destroy request for delegation id '" + delegationID + "' from client '"
-                        + clientDN + "'");
-
-        // Get the client's VOMS attributes
-        String[] vomsAttributes = GrDPX509Util.getVOMSAttributes(sc);
+        CertInfoTuple info = new CertInfoTuple(certs, requireVomsAttrs);
 
         // Generate a delegation id from the client DN and VOMS attributes
         if (delegationID == null || delegationID.length() == 0) {
-            delegationID = GrDPX509Util.genDlgID(clientDN, vomsAttributes);
+            delegationID = GrDPX509Util.genDlgID(info.dn, info.vomsAttributes);
         }
+
+        logger.debug("Got destroy request for delegation id '" + delegationID + "' from client '" + info.dn + "'");
 
         // Search for an existing entry in storage for this delegation ID (null
         // if non existing)
         try {
-            elem = m_storage.findGrDPStorageElement(delegationID, clientDN);
+            elem = m_storage.findGrDPStorageElement(delegationID, info.dn);
         } catch (GrDPStorageException e) {
             logger.error("Failure on storage interaction. Exception: ", e);
             throw new DelegationException("Internal failure.");
@@ -557,19 +561,16 @@ public class GliteDelegation {
 
         // Throw exception if non-existing
         if (elem == null) {
-            logger.debug("Failed to find delegation ID '" + delegationID + "' for client '" + clientDN
-                            + "' in storage.");
-            throw new DelegationException("Failed to find delegation ID '" + delegationID
-                            + "' in storage.");
+            logger.debug("Failed to find delegation ID '" + delegationID + "' for client '" + info.dn + "' in storage.");
+            throw new DelegationException("Failed to find delegation ID '" + delegationID + "' in storage.");
         }
 
         // Remove the credential from storage
         try {
-            m_storage.deleteGrDPStorageElement(delegationID, clientDN);
+            m_storage.deleteGrDPStorageElement(delegationID, info.dn);
         } catch (GrDPStorageException e) {
-            logger.error("Inconsistency needs manual intervention. Delegation ID '" + delegationID
-                            + " of client '" + clientDN + "' was found, "
-                            + "but could not be removed from storage.");
+            logger.error("Inconsistency needs manual intervention. Delegation ID '" + delegationID + " of client '"
+                    + info.dn + "' was found, " + "but could not be removed from storage.");
             throw new DelegationException("Failed to destroy delegated credential.");
         }
 
@@ -580,7 +581,7 @@ public class GliteDelegation {
         logger.debug("Processing getTerminationTime.");
 
         String delegationID = inDelegationID;
-        
+
         GrDPStorageElement elem = null;
 
         // Check if a bad configuration was detected on launch (and fail if
@@ -590,43 +591,20 @@ public class GliteDelegation {
             throw new DelegationException("Service is misconfigured.");
         }
 
-        // Init Security Context
-        InitSecurityContext.init();
-
-        // Get security context
-        SecurityContext sc = SecurityContext.getCurrentContext();
-        if (sc == null) {
-            logger.debug("Failed to get SecurityContext.");
-            throw new DelegationException("Failed to get client security information.");
-        }
-
-        String clientDN = null;
-        
-        // Get client information
-        try{
-            clientDN = CertUtil.getUserDN(sc.getClientCertChain()).getRFCDN();
-        }catch(IOException e){
-            throw new DelegationException("No user certificate found in the proxy chain: " + e.getMessage());
-        }
-        if (clientDN == null) {
-            logger.error("Failed to get client DN. It came null");
-            throw new DelegationException("Failed to get client DN.");
-        }
-        logger.debug("Got getTerminationTime request for delegation id '" + delegationID
-                        + "' from client '" + clientDN + "'");
-
-        // Get the client's VOMS attributes
-        String[] vomsAttributes = GrDPX509Util.getVOMSAttributes(sc);
+        CertInfoTuple info = new CertInfoTuple(certs, requireVomsAttrs);
 
         // Generate a delegation id from the client DN and VOMS attributes
         if (delegationID == null || delegationID.length() == 0) {
-            delegationID = GrDPX509Util.genDlgID(clientDN, vomsAttributes);
+            delegationID = GrDPX509Util.genDlgID(info.dn, info.vomsAttributes);
         }
+
+        logger.debug("Got getTerminationTime request for delegation id '" + delegationID + "' from client '" + info.dn
+                + "'");
 
         // Search for an existing entry in storage for this delegation ID (null
         // if non existing)
         try {
-            elem = m_storage.findGrDPStorageElement(delegationID, clientDN);
+            elem = m_storage.findGrDPStorageElement(delegationID, info.dn);
         } catch (GrDPStorageException e) {
             logger.error("Failure on storage interaction. Exception: ", e);
             throw new DelegationException("Internal failure.");
@@ -634,10 +612,8 @@ public class GliteDelegation {
 
         // Throw exception if non-existing
         if (elem == null) {
-            logger.debug("Failed to find delegation ID '" + delegationID + "' for client '" + clientDN
-                            + "' in storage.");
-            throw new DelegationException("Failed to find delegation ID '" + delegationID
-                            + "' in storage.");
+            logger.debug("Failed to find delegation ID '" + delegationID + "' for client '" + info.dn + "' in storage.");
+            throw new DelegationException("Failed to find delegation ID '" + delegationID + "' in storage.");
         }
 
         // Build a calendar object with the proper time
@@ -654,27 +630,48 @@ public class GliteDelegation {
      * @param dlgID The delegation ID of the new delegation
      * @param clientDN The DN of the owner of the delegated credential
      * @param vomsAttributes The list of VOMS attributes in the delegated
-     *        credential
+     *            credential
      * @return The certificate request for the new delegated credential
-     * @throws DelegationException Failed to create or store the new
-     *         credential request
+     * @throws DelegationException Failed to create or store the new credential
+     *             request
      */
-    private String createAndStoreCertificateRequest(X509Certificate parentCert, String dlgID, String clientDN,
-                    String[] vomsAttributes) throws DelegationException {
+    private String createAndStoreCertificateRequest(X509Certificate certs[], String dlgID, String clientDN,
+            String[] vomsAttributes) throws DelegationException {
 
         // Get a random KeyPair
         KeyPair keyPair = GrDPX509Util.getKeyPair(m_keySize);
-        
-        String privateKey = PrivateKeyReader.getPEM(keyPair.getPrivate());
+
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        try {
+            CertificateUtils.savePrivateKey(stream, keyPair.getPrivate(), Encoding.PEM, null, null);
+        } catch (IllegalArgumentException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+        String privateKey = stream.toString();
         logger.debug("KeyPair generation was successfull.");
         logger.debug("Public key is: " + keyPair.getPublic());
 
         // Generate the certificate request
         String certRequest = null;
         try {
-            certRequest = GrDPX509Util.createCertificateRequest(parentCert,
-                            GrDPConstants.DEFAULT_SIGNATURE_ALGORITHM, keyPair);
-        } catch (GeneralSecurityException e) {
+            ProxyCertificateOptions options = new ProxyCertificateOptions(certs);
+            ProxyCSR proxyCsr = ProxyCSRGenerator.generate(options);
+            PKCS10CertificationRequest req = proxyCsr.getCSR();
+            StringWriter stringWriter = new StringWriter();
+            PEMWriter pemWriter = new PEMWriter(stringWriter);
+            try {
+                pemWriter.writeObject(certRequest);
+                pemWriter.flush();
+            } catch (IOException e) {
+                throw new GeneralSecurityException("Certificate output as string failed: " + e.getMessage());
+            }
+
+            certRequest = stringWriter.toString();
+        } catch (Exception e) {
             logger.error("Error while generating the certificate request." + e);
             throw new DelegationException("Failed to generate a certificate request.");
         }
@@ -690,11 +687,13 @@ public class GliteDelegation {
         logger.debug("Cache ID (delegation ID + session ID): " + cacheID);
 
         try {
-			// TODO: remove search from cache, as the public key is used as random ID, each transaction is individual
-			// and search always fails, no update of request is possible and would give rise to race conditions.
-        	
-        	// Store the certificate request in cache
-            GrDPStorageCacheElement cacheElem = m_storage.findGrDPStorageCacheElement(cacheID, clientDN.getRFCDN());
+            // TODO: remove search from cache, as the public key is used as
+            // random ID, each transaction is individual
+            // and search always fails, no update of request is possible and
+            // would give rise to race conditions.
+
+            // Store the certificate request in cache
+            GrDPStorageCacheElement cacheElem = m_storage.findGrDPStorageCacheElement(cacheID, clientDN);
             if (cacheElem != null) {
                 cacheElem.setCertificateRequest(certRequest);
                 cacheElem.setPrivateKey(privateKey);
@@ -703,7 +702,7 @@ public class GliteDelegation {
             } else {
                 cacheElem = new GrDPStorageCacheElement();
                 cacheElem.setDelegationID(cacheID);
-                cacheElem.setDN(clientDN.getRFCDN());
+                cacheElem.setDN(clientDN);
                 cacheElem.setVomsAttributes(vomsAttributes);
                 cacheElem.setCertificateRequest(certRequest);
                 cacheElem.setPrivateKey(privateKey);
@@ -717,41 +716,42 @@ public class GliteDelegation {
 
         return certRequest;
     }
-    
+
     /**
      * Adds the given private key to the proxy certificate chain.
-     *
-     * The process is done the globus way - private key added right after
-     * the first certificate in the chain.
+     * 
+     * The process is done the globus way - private key added right after the
+     * first certificate in the chain.
      * 
      * @param proxyChain The proxy chain to which to add the private key
-     * @param privateKey The encoded private key to be added to the proxy certificate chain
+     * @param privateKey The encoded private key to be added to the proxy
+     *            certificate chain
      * @return An encoded proxy certificate with the given private key added
      */
     private String getProxyWithPrivateKey(X509Certificate[] proxyChain, String privateKey) {
 
         // Don't use the CertUtil routines as single writer is faster.
-		StringWriter writer = new StringWriter();
-		PEMWriter pemWriter = new PEMWriter(writer);
+        StringWriter writer = new StringWriter();
+        PEMWriter pemWriter = new PEMWriter(writer);
 
-		try {
-			pemWriter.writeObject(proxyChain[0]);
-			// make sure the writers are in sync.
-			pemWriter.flush();
-			// write the private key string.
-			writer.write(privateKey);
-			// make sure the writers are still in sync.
-			writer.flush();
+        try {
+            pemWriter.writeObject(proxyChain[0]);
+            // make sure the writers are in sync.
+            pemWriter.flush();
+            // write the private key string.
+            writer.write(privateKey);
+            // make sure the writers are still in sync.
+            writer.flush();
 
-			// add rest of the certs.
-			for (int i = 1; i < proxyChain.length; i++) {
-				pemWriter.writeObject(proxyChain[i]);
-			}
-			pemWriter.flush();
-		} catch (IOException e) {
-          logger.error("Failed to encode certificate in proxy chain: " + e.getMessage());
-          return null;
-		}
-		return writer.toString();
+            // add rest of the certs.
+            for (int i = 1; i < proxyChain.length; i++) {
+                pemWriter.writeObject(proxyChain[i]);
+            }
+            pemWriter.flush();
+        } catch (IOException e) {
+            logger.error("Failed to encode certificate in proxy chain: " + e.getMessage());
+            return null;
+        }
+        return writer.toString();
     }
 }

@@ -77,13 +77,6 @@ public class GrDPX509Util {
     public static final String CERT_CHAIN_CONTENT_TYPE = "application/x-x509-user-cert-chain";
     public static final String CERT_REQ_CONTENT_TYPE = "application/x-x509-cert-request";
     private static MessageDigest s_digester = null;
-    /** static PKIStore to avoid initializing it for every request */
-    // private static PKIStore s_trustStore;
-    /** The path to the CA trust directory. */
-    // private static final String CA_PATH_PROPERTY = "CA_PATH";
-    /** the default CA trust directory. */
-    // private static final String CA_PATH_DEFAULT =
-    // "/etc/grid-security/certificates/";
 
     static {
         LOGGER.info("initalizing ACValidator");
@@ -94,26 +87,6 @@ public class GrDPX509Util {
             throw new RuntimeException("Delegation utilities code initialization failed: " + e.getMessage(), e);
         }
 
-        /*
-         * String location = System.getProperty(CA_PATH_PROPERTY,
-         * CA_PATH_DEFAULT);
-         * 
-         * try { LOGGER.info("initalizing pkistore"); s_trustStore = new
-         * PKIStore(location, PKIStore.TYPE_CADIR, true);
-         * LOGGER.info("initalized"); } catch (CertificateException e) {
-         * LOGGER.fatal("Voms trustStore initialization failed: " +
-         * e.getMessage(), e); throw new
-         * RuntimeException("Voms trust anchors loading failed: " +
-         * e.getMessage()); } catch (CRLException e) {
-         * LOGGER.fatal("Voms trustStore initialization failed: " +
-         * e.getMessage(), e); throw new
-         * RuntimeException("Voms trust anchors loading failed: " +
-         * e.getMessage()); } catch (IOException e) {
-         * LOGGER.fatal("Voms trustStore initialization failed: " +
-         * e.getMessage(), e); throw new
-         * RuntimeException("Voms trust anchors loading failed: " +
-         * e.getMessage()); }
-         */
     }
 
     // ------------------- following code is deprecated and will be removed

@@ -1,0 +1,16 @@
+Source: canl-java-axis2
+Priority: extra
+Maintainer: Joni Hahkala <joni.hahkala@cern.ch>
+Build-Depends: debhelper (>= 7.0.50~), maven2, default-jdk
+Standards-Version: 3.9.2.0
+Section: java
+Homepage: https://twiki.cern.ch/twiki/bin/view/EMI/DelegationJava
+Vcs-Git: https://github.com/jhahkala/delegation-java.git
+Vcs-Browser: https://github.com/jhahkala/delegation-java.git
+
+Package: libdelegation-java
+Architecture: all
+Depends: default-jre-headless, lsb-base, libcanl-java, ${java:Depends}, ${misc:Depends}
+Recommends: ${java:Recommends}
+Description: Java library for implementing proxy delegation in java.
+ A java library for implementing grid proxy delegation in java.

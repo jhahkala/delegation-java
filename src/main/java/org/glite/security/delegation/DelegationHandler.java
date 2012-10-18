@@ -33,12 +33,11 @@ import eu.emi.security.authn.x509.proxy.ProxyGenerator;
 import eu.emi.security.authn.x509.proxy.ProxyRequestOptions;
 
 /**
- * The delegation handler class
+ * The delegation handler class for the client side
  */
 public class DelegationHandler {
     private static final Logger LOGGER = Logger.getLogger(DelegationHandler.class);
     private X509Certificate[] m_certs = null;
-//    private byte[] x509Cert = null;
     private String strX509CertChain = null;
 
     /**

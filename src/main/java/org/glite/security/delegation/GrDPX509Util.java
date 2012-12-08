@@ -37,7 +37,6 @@ import org.bouncycastle.jce.provider.JDKKeyPairGenerator;
 import org.bouncycastle.openssl.PEMWriter;
 import org.bouncycastle.util.encoders.Hex;
 import org.glite.security.delegation.storage.GrDPStorageFactory;
-import org.glite.voms.VOMSValidator;
 import org.italiangrid.voms.VOMSAttribute;
 import org.italiangrid.voms.VOMSValidators;
 import org.italiangrid.voms.ac.VOMSACValidator;

@@ -14,7 +14,15 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
-
+	
+	<repositories>
+		<repository>
+			<id>cnaf-snapshots</id>
+			<name>CNAF snapshots</name>
+			<url>http://radiohead.cnaf.infn.it:8081/nexus/content/repositories/cnaf-snapshots/</url>
+		</repository>
+	</repositories>
+	
 	<dependencies>
 		<dependency>
 			<groupId>org.eclipse.jetty.aggregate</groupId>
@@ -44,30 +52,15 @@
 	</dependencies>
 	<build>
 		<plugins>
-<!--			<plugin>
-				<groupId>org.apache.axis2</groupId>
-				<artifactId>axis2-wsdl2code-maven-plugin</artifactId>
-				<version>1.6.2</version>
-				<configuration>
- 					<generateAllClasses>true</generateAllClasses>
- 					<generateServicesXml>true</generateServicesXml> 
- 					<syncMode>sync</syncMode>
- 					<skipBuildXML>true</skipBuildXML> 
-  					<generateServerSide>true</generateServerSide>
-					<generateServerSideInterface>true</generateServerSideInterface>
-					<packageName>eu.emi.security.canl.axis2.test</packageName>
-					<wsdlFile>src/interface/EchoService.wsdl</wsdlFile>
-					<databindingName>xmlbeans</databindingName>
-				</configuration>
-				<executions>
-					<execution>
-						<goals>
-							<goal>wsdl2code</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
--->			<plugin>
+			<!-- <plugin> <groupId>org.apache.axis2</groupId> <artifactId>axis2-wsdl2code-maven-plugin</artifactId> 
+				<version>1.6.2</version> <configuration> <generateAllClasses>true</generateAllClasses> 
+				<generateServicesXml>true</generateServicesXml> <syncMode>sync</syncMode> 
+				<skipBuildXML>true</skipBuildXML> <generateServerSide>true</generateServerSide> 
+				<generateServerSideInterface>true</generateServerSideInterface> <packageName>eu.emi.security.canl.axis2.test</packageName> 
+				<wsdlFile>src/interface/EchoService.wsdl</wsdlFile> <databindingName>xmlbeans</databindingName> 
+				</configuration> <executions> <execution> <goals> <goal>wsdl2code</goal> 
+				</goals> </execution> </executions> </plugin> -->
+			<plugin>
 				<artifactId>maven-source-plugin</artifactId>
 				<executions>
 					<execution>

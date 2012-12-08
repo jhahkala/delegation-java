@@ -51,13 +51,10 @@ public class CertInfoTuple {
             throw new DelegationException("Failed to get client DN.");
         }
 
-        // Get the VOMS attributes
-        VOMSValidator validator = new VOMSValidator(certs);
-        validator.validate();
-        vomsAttributes = validator.getAllFullyQualifiedAttributes();
+        vomsAttributes = GrDPX509Util.getVOMSAttributes(certs);
 
         if (requireVomsAttrs) {
-            if (vomsAttributes == null) {
+            if (vomsAttributes == null || vomsAttributes.length == 0) {
                 throw new DelegationException("Failed to get required voms attributes.");
             }
             for (String attribute : vomsAttributes) {

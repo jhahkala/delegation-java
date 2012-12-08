@@ -460,7 +460,8 @@ public class GrDPX509Util {
      */
     public static String[] getVOMSAttributes(X509Certificate certs[]) {
         VOMSValidator validator = new VOMSValidator(certs);
-        String attributes[] = validator.validate().getAllFullyQualifiedAttributes();
+        validator.validate();
+        String attributes[] = validator.getAllFullyQualifiedAttributes();
         return attributes;
     }
 

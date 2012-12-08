@@ -53,7 +53,8 @@ public class CertInfoTuple {
 
         // Get the VOMS attributes
         VOMSValidator validator = new VOMSValidator(certs);
-        vomsAttributes = validator.validate().getAllFullyQualifiedAttributes();
+        validator.validate();
+        vomsAttributes = validator.getAllFullyQualifiedAttributes();
 
         if (requireVomsAttrs) {
             if (vomsAttributes == null) {

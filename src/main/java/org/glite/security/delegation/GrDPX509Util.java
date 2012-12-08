@@ -17,53 +17,32 @@
 
 package org.glite.security.delegation;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.FilenameFilter;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.RandomAccessFile;
 import java.io.StringWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.MessageDigest;
-import java.security.NoSuchProviderException;
-import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.SecureRandom;
-//import java.security.cert.CRLException;
-import java.security.cert.CertificateEncodingException;
-import java.security.cert.CertificateException;
-import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
-import java.util.Hashtable;
+import java.util.List;
 import java.util.StringTokenizer;
-import java.util.Vector;
 
 import org.apache.log4j.Logger;
 import org.bouncycastle.asn1.x509.X509Name;
 import org.bouncycastle.jce.PKCS10CertificationRequest;
 import org.bouncycastle.jce.provider.JDKKeyPairGenerator;
 import org.bouncycastle.openssl.PEMWriter;
-import org.bouncycastle.util.encoders.Base64;
 import org.bouncycastle.util.encoders.Hex;
 import org.glite.security.delegation.storage.GrDPStorageFactory;
 import org.glite.voms.VOMSValidator;
+import org.italiangrid.voms.VOMSAttribute;
+import org.italiangrid.voms.VOMSValidators;
+import org.italiangrid.voms.ac.VOMSACValidator;
+//import java.security.cert.CRLException;
 //import org.glite.voms.ac.ACValidator;
-
-import eu.emi.security.authn.x509.impl.CertificateUtils;
-import eu.emi.security.authn.x509.impl.CertificateUtils.Encoding;
 
 /**
  * Utility to manage X509 certificates
@@ -77,6 +56,7 @@ public class GrDPX509Util {
     public static final String CERT_CHAIN_CONTENT_TYPE = "application/x-x509-user-cert-chain";
     public static final String CERT_REQ_CONTENT_TYPE = "application/x-x509-cert-request";
     private static MessageDigest s_digester = null;
+    private static VOMSACValidator vomsValidator = null;
 
     static {
         try {
@@ -459,10 +439,21 @@ public class GrDPX509Util {
      *         if no attributes.
      */
     public static String[] getVOMSAttributes(X509Certificate certs[]) {
-        VOMSValidator validator = new VOMSValidator(certs);
-        validator.validate();
-        String attributes[] = validator.getAllFullyQualifiedAttributes();
-        return attributes;
+        if (vomsValidator == null){
+            vomsValidator = VOMSValidators.newValidator();
+        }
+        List<VOMSAttribute> attributeCerts = vomsValidator.validate(certs);
+        ArrayList<String> attributes = new ArrayList<String>();
+        
+        for(VOMSAttribute attributeCert:attributeCerts){
+            if(attributeCert != null){
+                List<String> theseAttributes = attributeCert.getFQANs();
+                if(theseAttributes != null){
+                    attributes.addAll(theseAttributes);
+                }
+            }
+        }
+        return attributes.toArray(new String[attributes.size()]);
     }
 
     /**

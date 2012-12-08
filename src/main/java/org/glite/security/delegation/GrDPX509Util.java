@@ -40,8 +40,6 @@ import org.glite.security.delegation.storage.GrDPStorageFactory;
 import org.italiangrid.voms.VOMSAttribute;
 import org.italiangrid.voms.VOMSValidators;
 import org.italiangrid.voms.ac.VOMSACValidator;
-//import java.security.cert.CRLException;
-//import org.glite.voms.ac.ACValidator;
 
 /**
  * Utility to manage X509 certificates
@@ -321,36 +319,6 @@ public class GrDPX509Util {
      * @return A PEM encoded certificate request.
      * @throws GeneralSecurityException Failed to generate the certificate
      *             request.
-     * @deprecated use the method with certificate input instead to avoid
-     *             problems with DN encoding.
-     */
-    public static String createCertificateRequest(X509Name subjectDN, String sigAlgName, KeyPair keyPair)
-            throws GeneralSecurityException {
-
-        PKCS10CertificationRequest certRequest = new PKCS10CertificationRequest(sigAlgName, subjectDN,
-                keyPair.getPublic(), null, keyPair.getPrivate());
-
-        StringWriter stringWriter = new StringWriter();
-        PEMWriter pemWriter = new PEMWriter(stringWriter);
-        try {
-            pemWriter.writeObject(certRequest);
-            pemWriter.flush();
-        } catch (IOException e) {
-            throw new GeneralSecurityException("Certificate output as string failed: " + e.getMessage());
-        }
-
-        return stringWriter.toString();
-    }
-
-    /**
-     * Create a new certificate request.
-     * 
-     * @param subjectDN The dn to include in the certificate request.
-     * @param sigAlgName The algorithm to be used.
-     * @param keyPair The keypair to include in the certificate.
-     * @return A PEM encoded certificate request.
-     * @throws GeneralSecurityException Failed to generate the certificate
-     *             request.
      */
     public static String createCertificateRequest(X509Certificate subjectCert, String sigAlgName, KeyPair keyPair)
             throws GeneralSecurityException {
@@ -365,6 +333,12 @@ public class GrDPX509Util {
             pemWriter.flush();
         } catch (IOException e) {
             throw new GeneralSecurityException("Certificate output as string failed: " + e.getMessage());
+        } finally {
+            try {
+                pemWriter.close();
+            } catch (IOException e) {
+                // should not happen, and doesn't matter anyway.
+            }
         }
 
         return stringWriter.toString();

@@ -23,7 +23,7 @@ package org.glite.security.delegation;
 public abstract class GrDPConstants {
     public static final String NEWLINE = System.getProperty("line.separator");
     public static final String CNPROXY = "CN=proxy";
-    public static final String DEFAULT_SIGNATURE_ALGORITHM = "sha1WithRSAEncryption";
+    public static final String DEFAULT_SIGNATURE_ALGORITHM = "SHA256WithRSAEncryption";
     /** @deprecated don't use */
     public static String CRH = "-----BEGIN CERTIFICATE REQUEST-----";
     /** @deprecated don't use */

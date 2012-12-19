@@ -24,7 +24,7 @@ prefix=/
 deb_name=lib$(name)
 
 spec_file=fedora/$(name).spec
-maven_settings_file=project/maven-settings.xml
+maven_settings_file=maven-settings.xml
 
 rpmbuild_dir=$(CURDIR)/rpmbuild
 debbuild_dir = $(CURDIR)/debbuild
@@ -52,14 +52,12 @@ dist: spec
 	@echo "Package the sources..."
 	test ! -d $(tmp_dir) || rm -fr $(tmp_dir)
 	mkdir -p $(tmp_dir)/$(name)-$(version)
-	cp Makefile README.md pom.xml $(tmp_dir)/$(name)-$(version)
+	cp Makefile README.md pom.xml maven-settings.xml $(tmp_dir)/$(name)-$(version)
 	cp -r debian fedora $(tmp_dir)/$(name)-$(version)
-	cp -r project $(tmp_dir)/$(name)-$(version)
 	cp -r doc $(tmp_dir)/$(name)-$(version)
 	cp -r src $(tmp_dir)/$(name)-$(version)
 	test ! -f $(name)-$(version).tar.gz || rm $(name)-$(version).tar.gz
 	tar -C $(tmp_dir) -czf $(name)-$(version).tar.gz $(name)-$(version)
-	rm -fr $(tmp_dir)
 
 
 package: spec
@@ -69,9 +67,14 @@ package: spec
 
 install:
 	@echo "Install binary in $(DESTDIR)$(prefix)"
-	test -f target/$(name)-$(version).tar.gz
-	mkdir -p $(DESTDIR)$(prefix)
-	tar -C $(DESTDIR)$(prefix) -xvzf target/$(name)-$(version).tar.gz
+	mkdir -p $(DESTDIR)$(prefix)/usr/share/java
+	cp target/$(name)-$(version).jar $(DESTDIR)$(prefix)/usr/share/java
+	@echo link jar to unversioned version
+	cd $(DESTDIR)$(prefix)/usr/share/java/;	ln -snf $(name)-$(version).jar $(name).jar
+	chmod -f 0644 $(DESTDIR)$(prefix)/usr/share/java/$(name)-$(version).jar
+	mkdir -p $(DESTDIR)$(prefix)/usr/share/doc/$(name)-$(version)
+	cp -r doc/* $(DESTDIR)$(prefix)/usr/share/doc/$(name)-$(version)
+	chmod -Rf 0644 $(DESTDIR)$(prefix)/usr/share/doc/$(name)-$(version)/*
 
 
 pre_rpmbuild:
@@ -95,10 +98,10 @@ rpm: pre_rpmbuild
 pre_debbuild:
 	test -f $(name)-$(version).tar.gz || make dist
 	@echo "Prepare for Debian building in $(debbuild_dir)"
-	mv $(name)-$(version).tar.gz $(name)-$(version).src.tar.gz
+	mv $(name)-$(version).tar.gz $(deb_name)-$(version).src.tar.gz
 	mkdir -p $(debbuild_dir)
-	cp $(name)-$(version).src.tar.gz $(debbuild_dir)/$(name)_$(version).orig.tar.gz
-	tar -C $(debbuild_dir) -xzf $(name)-$(version).src.tar.gz
+	cp $(deb_name)-$(version).src.tar.gz $(debbuild_dir)/$(deb_name)_$(version).orig.tar.gz
+	tar -C $(debbuild_dir) -xzf $(deb_name)-$(version).src.tar.gz
 
 
 deb: pre_debbuild
@@ -135,8 +138,8 @@ etics:
 		mkdir -p $(tmp_dir) ; \
 		dpkg -x $(debbuild_dir)/$(deb_name)_$(version)-*.deb $(tmp_dir) ; \
 		cd $(tmp_dir) ; \
-		tar -C $(tmp_dir) -czf $(name)-$(version).tar.gz * ; \
-		mv -v $(name)-$(version).tar.gz $(tgz_dir) ; \
+		tar -C $(tmp_dir) -czf $(deb_name)-$(version).tar.gz * ; \
+		mv -v $(deb_name)-$(version).tar.gz $(tgz_dir) ; \
 		rm -fr $(tmp_dir) ; \
 	fi
 

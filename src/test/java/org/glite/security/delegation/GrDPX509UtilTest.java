@@ -4,4 +4,7 @@ import junit.framework.TestCase;
 
 public class GrDPX509UtilTest  extends TestCase {
 
+	public void testNothing(){
+		return;
+	}
 }

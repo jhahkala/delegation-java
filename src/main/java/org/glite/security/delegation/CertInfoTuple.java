@@ -2,8 +2,6 @@ package org.glite.security.delegation;
 
 import java.security.cert.X509Certificate;
 
-import org.glite.voms.VOMSValidator;
-
 import eu.emi.security.authn.x509.impl.X500NameUtils;
 import eu.emi.security.authn.x509.proxy.ProxyUtils;
 

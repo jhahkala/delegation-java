@@ -95,6 +95,8 @@ public class DelegationHandler {
             } catch (IOException e1) {
                 LOGGER.error("Could not load the original certificate request from cache.");
                 throw new DelegationException("Could not load the original certificate request from cache: " + e1.getMessage());
+            } finally {
+            	pemReader.close();
             }
             
             ProxyRequestOptions options = new ProxyRequestOptions(certs, req);

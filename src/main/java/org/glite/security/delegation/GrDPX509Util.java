@@ -31,7 +31,6 @@ import java.util.List;
 import java.util.StringTokenizer;
 
 import org.apache.log4j.Logger;
-import org.bouncycastle.asn1.x509.X509Name;
 import org.bouncycastle.jce.PKCS10CertificationRequest;
 import org.bouncycastle.jce.provider.JDKKeyPairGenerator;
 import org.bouncycastle.openssl.PEMWriter;
@@ -303,7 +302,7 @@ public class GrDPX509Util {
         LOGGER.debug("Entered getGrDStorage.");
 
         // Get the class references for the helper and DBManager objects
-        Class storageClass = Class.forName(factoryClass);
+        Class<?> storageClass = Class.forName(factoryClass);
         LOGGER.debug("Successfully loaded class '" + factoryClass + "'");
 
         // Create a new helper object instance and return
@@ -363,7 +362,6 @@ public class GrDPX509Util {
      * @param pk public key of a certificate (request)
      * @return The generated session ID
      */
-    @SuppressWarnings("unused")
     public static String generateSessionID(PublicKey pk) throws java.security.NoSuchAlgorithmException {
         return new String(Hex.encode(getMostSignificant(digest(pk.getEncoded()), 20)));
 
@@ -461,7 +459,7 @@ public class GrDPX509Util {
         }
 
         StringTokenizer st = new StringTokenizer("\t");
-        ArrayList vomsAttributes = new ArrayList();
+        ArrayList<String> vomsAttributes = new ArrayList<String>();
 
         while (st.hasMoreTokens()) {
             vomsAttributes.add(st.nextToken());

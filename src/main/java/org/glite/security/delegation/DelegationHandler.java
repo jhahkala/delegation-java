@@ -55,7 +55,7 @@ public class DelegationHandler {
      * Handles the service certificate request and generates a proxy certificate. Stores the new proxy certificate in
      * proxyStorage
      * 
-     * @param certReq Service certificate request
+     * @param certReq Certificate request received form the server.
      * @param delegationID Delegation identifier
      * @param propFile location of properties file
      * @return Generated proxy certificate

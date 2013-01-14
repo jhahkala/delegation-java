@@ -2,8 +2,6 @@ package org.glite.security.delegation;
 
 import java.security.cert.X509Certificate;
 
-import org.glite.voms.VOMSValidator;
-
 import eu.emi.security.authn.x509.impl.X500NameUtils;
 import eu.emi.security.authn.x509.proxy.ProxyUtils;
 
@@ -15,7 +13,7 @@ import eu.emi.security.authn.x509.proxy.ProxyUtils;
  * 
  */
 public class CertInfoTuple {
-    /** The end entity certificate from teh certificate chain. */
+    /** The end entity certificate from the certificate chain. */
     public X509Certificate endEntityCert = null;
     /** The end entity DN. */
     public String dn = null;

@@ -94,7 +94,7 @@ public class GliteDelegation {
      * whether the presence of voms attributes will be required in the incoming
      * certificate chains.
      */
-    public static boolean requireVomsAttrs = true;
+    public static boolean requireVomsAttrs = false;
 
     /**
      * Loads the DLGEE properties from the default config file and calls the
@@ -664,8 +664,9 @@ public class GliteDelegation {
             StringWriter stringWriter = new StringWriter();
             PEMWriter pemWriter = new PEMWriter(stringWriter);
             try {
-                pemWriter.writeObject(certRequest);
+                pemWriter.writeObject(req);
                 pemWriter.flush();
+                pemWriter.close();
             } catch (IOException e) {
                 throw new GeneralSecurityException("Certificate output as string failed: " + e.getMessage());
             }
@@ -673,7 +674,7 @@ public class GliteDelegation {
             certRequest = stringWriter.toString();
         } catch (Exception e) {
             logger.error("Error while generating the certificate request." + e);
-            throw new DelegationException("Failed to generate a certificate request.");
+            throw new DelegationException("Failed to generate a certificate request. " + e.getMessage());
         }
         logger.debug("Certificate request generation was successfull.");
 

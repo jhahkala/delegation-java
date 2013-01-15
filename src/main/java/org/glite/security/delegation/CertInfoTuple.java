@@ -38,14 +38,16 @@ public class CertInfoTuple {
             throw new DelegationException("No certificates given.");
         }
         endEntityCert = ProxyUtils.getEndUserCertificate(certs);
+//        System.out.println(endEntityCert);
 
         if (endEntityCert == null) {
             throw new DelegationException("No end entity certificate found on the certificate chain.");
         }
 
         // Get client DN
-        String clientDN = X500NameUtils.getReadableForm(endEntityCert.getSubjectX500Principal());
-        if (clientDN == null) {
+        dn = X500NameUtils.getReadableForm(endEntityCert.getSubjectX500Principal());
+//        System.out.println(clientDN);
+        if (dn == null) {
             throw new DelegationException("Failed to get client DN.");
         }
 

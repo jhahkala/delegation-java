@@ -48,7 +48,26 @@ public class DelegationHandler {
      * @param propFile location of properties file
      */
     public DelegationHandler(String certReq, String delegationID, String propFile) throws Exception {
-        requestHandler(certReq, delegationID, propFile);
+        GrDProxyDlgorOptions dlgorOpt = null;
+        try {
+            dlgorOpt = new GrDProxyDlgorOptions(propFile);
+        } catch (IOException e2) {
+            LOGGER.error("failed to read delegation options from: " + propFile + " nor from default location. Error was: " + e2.getMessage());
+            return;
+        }
+
+        requestHandler(certReq, delegationID, dlgorOpt);
+    }
+
+    /**
+     * Class constructor
+     * 
+     * @param certReq Service certificate request
+     * @param delegationID Delegation identifier
+     * @param propFile location of properties file
+     */
+    public DelegationHandler(String certReq, String delegationID, GrDProxyDlgorOptions opts) throws Exception {
+        requestHandler(certReq, delegationID, opts);
     }
 
     /**
@@ -60,15 +79,7 @@ public class DelegationHandler {
      * @param propFile location of properties file
      * @return Generated proxy certificate
      */
-    private void requestHandler(String certReq, String delegationID, String propFile) throws Exception{
-        GrDProxyDlgorOptions dlgorOpt = null;
-        try {
-            dlgorOpt = new GrDProxyDlgorOptions(propFile);
-        } catch (IOException e2) {
-            LOGGER.error("failed to read delegation options from: " + propFile + " nor from default location. Error was: " + e2.getMessage());
-            return;
-        }
-
+    private void requestHandler(String certReq, String delegationID, GrDProxyDlgorOptions dlgorOpt) throws Exception{
         try {
             LOGGER.debug("User Cert/Proxy File" + dlgorOpt.getDlgorCertFile());
             LOGGER.debug("User Key/Proxy File" + dlgorOpt.getDlgorKeyFile());
@@ -80,7 +91,14 @@ public class DelegationHandler {
                 pass = dlgorOpt.getDlgorPass().toCharArray();
             }
             
-            PEMCredential pemCredential = new PEMCredential(dlgorOpt.getDlgorCertFile(), dlgorOpt.getDlgorKeyFile(), pass);
+            PEMCredential pemCredential = null;
+            // if no keyfile given, assume it's a proxy.
+            if(dlgorOpt.getDlgorKeyFile() == null){
+                pemCredential = new PEMCredential(dlgorOpt.getDlgorCertFile(), pass);
+            } else {
+                pemCredential = new PEMCredential(dlgorOpt.getDlgorCertFile(), dlgorOpt.getDlgorKeyFile(), pass);
+            }
+            
             X509Certificate[] certs = pemCredential.getCertificateChain();
             
             for (int n = 0; n < certs.length; n++){

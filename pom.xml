@@ -4,7 +4,7 @@
 
 	<groupId>eu.eu-emi.security</groupId>
 	<artifactId>delegation-java</artifactId>
-	<version>3.0.0</version>
+	<version>3.0.1</version>
 	<packaging>jar</packaging>
 
 	<name>Java delegation library</name>

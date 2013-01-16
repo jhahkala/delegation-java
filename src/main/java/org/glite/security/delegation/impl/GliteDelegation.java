@@ -151,6 +151,7 @@ public class GliteDelegation {
      * given (or generated if not given) id already exists.
      * 
      * @param inDelegationID The delegation id used.
+     * @param certs The certificates the user used to authenticate himself.
      * @return The generated Proxy request in PEM encoding.
      * @throws DelegationException Thrown in case of failures.
      */
@@ -207,6 +208,7 @@ public class GliteDelegation {
      * 
      * @param inDelegationID the delegation id to use, will be generated if not
      *            given.
+     * @param certs The certificates the user used to authenticate himself.
      * @return The newProxyReq object.
      * @throws DelegationException thrown in case of failure.
      */
@@ -269,6 +271,7 @@ public class GliteDelegation {
      * 
      * @param inDelegationID The delegation id to use, will be genarated if not
      *            given.
+     * @param certs The certificates the user used to authenticate himself.
      * @return The delegation request in PEM format.
      * @throws DelegationException Thrown in case of failure.
      */
@@ -315,11 +318,12 @@ public class GliteDelegation {
     }
 
     /**
-     * @param inDelegationID
-     * @param proxy
+     * @param inDelegationID The delegation ID used for the delegation.
+     * @param proxy The new proxy received from the client.
+     * @param certs The certificates the user used to authenticate himself.
      * @throws DelegationException
      */
-    public void putProxy(String inDelegationID, String proxy, X509Certificate certs[]) throws DelegationException {
+    public void putProxy(String inDelegationID, String proxy, X509Certificate certs[]) throws Exception {// throws DelegationException {
         logger.info("Processing putProxy.");
 
         String delegationID = inDelegationID;
@@ -415,6 +419,7 @@ public class GliteDelegation {
         String cacheID = delegationID;
         try {
             cacheID = delegationID + '+' + GrDPX509Util.generateSessionID(proxyCertChain[0].getPublicKey());
+            logger.debug("public key is: " + proxyCertChain[0].getPublicKey());
         } catch (GeneralSecurityException e) {
             logger.error("Error while generating the session ID." + e);
             throw new DelegationException("Failed to generate the session ID.");
@@ -444,6 +449,7 @@ public class GliteDelegation {
         PKCS10CertificationRequest req;
         try {
             req = (PKCS10CertificationRequest) pemReader.readObject();
+            pemReader.close();
         } catch (IOException e1) {
             logger.error("Could not load the original certificate request from cache.");
             throw new DelegationException("Could not load the original certificate request from cache: "
@@ -483,8 +489,10 @@ public class GliteDelegation {
         
         ByteArrayOutputStream proxyStream = new ByteArrayOutputStream();
         try {
-            CertificateUtils.savePEMKeystore(proxyStream, credential.getKeyStore(), credential.getKeyAlias(), null, null, null);
+            CertificateUtils.savePEMKeystore(proxyStream, credential.getKeyStore(), credential.getKeyAlias(), null, credential.getKeyPassword(), null, true);
         } catch (Exception e) {
+            logger.error("Error while converting the proxy to string for storage: " + e.getClass() + ": " + e.getMessage());
+            e.printStackTrace();
             throw new DelegationException("Error while converting the proxy to string for storage: " + e.getClass() + ": " + e.getMessage());
         } 
         
@@ -627,6 +635,7 @@ public class GliteDelegation {
      * Creates a new certificate request and stores it in the storage cache
      * area.
      * 
+     * @param certs The certificates the user used to authenticate himself.
      * @param dlgID The delegation ID of the new delegation
      * @param clientDN The DN of the owner of the delegated credential
      * @param vomsAttributes The list of VOMS attributes in the delegated
@@ -659,7 +668,8 @@ public class GliteDelegation {
         String certRequest = null;
         try {
             ProxyCertificateOptions options = new ProxyCertificateOptions(certs);
-            ProxyCSR proxyCsr = ProxyCSRGenerator.generate(options);
+            options.setPublicKey(keyPair.getPublic());
+            ProxyCSR proxyCsr = ProxyCSRGenerator.generate(options, keyPair.getPrivate());
             PKCS10CertificationRequest req = proxyCsr.getCSR();
             StringWriter stringWriter = new StringWriter();
             PEMWriter pemWriter = new PEMWriter(stringWriter);
@@ -681,6 +691,7 @@ public class GliteDelegation {
         String cacheID = null;
         try {
             cacheID = dlgID + '+' + GrDPX509Util.generateSessionID(keyPair.getPublic());
+            logger.debug("public key is: " + keyPair.getPublic());
         } catch (GeneralSecurityException e) {
             logger.error("Error while generating the session ID." + e);
             throw new DelegationException("Failed to generate the session ID.");
@@ -718,41 +729,4 @@ public class GliteDelegation {
         return certRequest;
     }
 
-    /**
-     * Adds the given private key to the proxy certificate chain.
-     * 
-     * The process is done the globus way - private key added right after the
-     * first certificate in the chain.
-     * 
-     * @param proxyChain The proxy chain to which to add the private key
-     * @param privateKey The encoded private key to be added to the proxy
-     *            certificate chain
-     * @return An encoded proxy certificate with the given private key added
-     */
-    private String getProxyWithPrivateKey(X509Certificate[] proxyChain, String privateKey) {
-
-        // Don't use the CertUtil routines as single writer is faster.
-        StringWriter writer = new StringWriter();
-        PEMWriter pemWriter = new PEMWriter(writer);
-
-        try {
-            pemWriter.writeObject(proxyChain[0]);
-            // make sure the writers are in sync.
-            pemWriter.flush();
-            // write the private key string.
-            writer.write(privateKey);
-            // make sure the writers are still in sync.
-            writer.flush();
-
-            // add rest of the certs.
-            for (int i = 1; i < proxyChain.length; i++) {
-                pemWriter.writeObject(proxyChain[i]);
-            }
-            pemWriter.flush();
-        } catch (IOException e) {
-            logger.error("Failed to encode certificate in proxy chain: " + e.getMessage());
-            return null;
-        }
-        return writer.toString();
-    }
 }

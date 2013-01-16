@@ -24,11 +24,12 @@
 			<name>Central Repository</name>
 			<url>http://repo.maven.apache.org/maven2</url>
 		</repository>
-		<repository>
+<!-- 		<repository>
 			<id>cnaf-snapshots</id>
 			<name>CNAF snapshots</name>
 			<url>http://radiohead.cnaf.infn.it:8081/nexus/content/repositories/cnaf-snapshots/</url>
 		</repository>
+-->
 	</repositories>
 
 	<dependencies>

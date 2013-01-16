@@ -94,7 +94,7 @@ public class GliteDelegation {
      * whether the presence of voms attributes will be required in the incoming
      * certificate chains.
      */
-    public static boolean requireVomsAttrs = false;
+    public static boolean requireVomsAttrs = true;
 
     /**
      * Loads the DLGEE properties from the default config file and calls the
@@ -157,6 +157,13 @@ public class GliteDelegation {
      */
     public String getProxyReq(String inDelegationID, X509Certificate certs[]) throws DelegationException {
         logger.debug("Processing getProxyReq.");
+
+        if(certs == null || certs.length == 0){
+            logger.error("Did not get any certificates.");
+            throw new DelegationException("Did not get any certificates.");
+        }
+
+        logger.debug("Got " + certs.length + " certs.");
         String delegationID = inDelegationID;
 
         GrDPStorageElement elem = null;
@@ -167,7 +174,7 @@ public class GliteDelegation {
             logger.error("Service is misconfigured. Stopping execution.");
             throw new DelegationException("Service is misconfigured.");
         }
-
+        
         CertInfoTuple info = new CertInfoTuple(certs, requireVomsAttrs);
 
         logger.debug("Got get proxy req request from client '" + info.dn + "', getting VOMS attributes.");

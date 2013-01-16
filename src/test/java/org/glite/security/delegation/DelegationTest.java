@@ -18,6 +18,9 @@ import junit.framework.TestCase;
 public class DelegationTest extends TestCase {
 
     public void testDelegation() throws Exception {
+        
+        // for testing purposes
+        GliteDelegation.requireVomsAttrs = false;
 
         Logger LOGGERRoot = Logger.getLogger("org.glite.security");
         Layout lay = new PatternLayout("%d{ISO8601} %-5p [%t] %l %x - %m%n");
@@ -39,6 +42,13 @@ public class DelegationTest extends TestCase {
 
         X509Certificate[] certChain = credential.getCertificateChain();
 
+        // first try to remove old delegation in case one exists.
+        try {
+            delegation.destroy(delegationId, certChain);
+        }catch(Exception e){
+            // ignore
+        }
+        
         String req = delegation.getProxyReq(delegationId, certChain);
         System.out.println(req);
 
@@ -53,6 +63,9 @@ public class DelegationTest extends TestCase {
 
         // server side new proxy storage
         delegation.putProxy(delegationId, certString, certChain);
+
+        // remove delegation in the end
+//        delegation.destroy(delegationId, certChain);
 
     }
 

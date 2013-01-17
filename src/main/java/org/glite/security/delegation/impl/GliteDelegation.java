@@ -174,8 +174,13 @@ public class GliteDelegation {
             logger.error("Service is misconfigured. Stopping execution.");
             throw new DelegationException("Service is misconfigured.");
         }
-        
-        CertInfoTuple info = new CertInfoTuple(certs, requireVomsAttrs);
+        CertInfoTuple info = null;
+        try{
+            info = new CertInfoTuple(certs, requireVomsAttrs);
+        } catch(Exception e){
+            logger.error("Getting info from the certificate chain failed: " + e.getClass() + " " + e.getMessage());
+            throw new DelegationException("Getting info from the certificate chain failed: " + e.getClass() + " " + e.getMessage());
+        }
 
         logger.debug("Got get proxy req request from client '" + info.dn + "', getting VOMS attributes.");
 

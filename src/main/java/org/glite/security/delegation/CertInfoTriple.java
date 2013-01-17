@@ -2,6 +2,8 @@ package org.glite.security.delegation;
 
 import java.security.cert.X509Certificate;
 
+import org.apache.log4j.Logger;
+
 import eu.emi.security.authn.x509.impl.X500NameUtils;
 import eu.emi.security.authn.x509.proxy.ProxyUtils;
 
@@ -12,7 +14,9 @@ import eu.emi.security.authn.x509.proxy.ProxyUtils;
  * @author hahkala
  * 
  */
-public class CertInfoTuple {
+public class CertInfoTriple {
+    /** the logging facility **/
+    private static final Logger LOGGER = Logger.getLogger(CertInfoTriple.class);
     /** The end entity certificate from the certificate chain. */
     public X509Certificate endEntityCert = null;
     /** The end entity DN. */
@@ -33,7 +37,7 @@ public class CertInfoTuple {
      *             end entity certificate is found, no end entity DN is found or
      *             voms attributes are required, but not found or invalid.
      */
-    public CertInfoTuple(X509Certificate certs[], boolean requireVomsAttrs) throws DelegationException {
+    public CertInfoTriple(X509Certificate certs[], boolean requireVomsAttrs) throws DelegationException {
         if (certs == null) {
             throw new DelegationException("No certificates given.");
         }
@@ -51,15 +55,23 @@ public class CertInfoTuple {
             throw new DelegationException("Failed to get client DN.");
         }
 
-        vomsAttributes = GrDPX509Util.getVOMSAttributes(certs);
+        try{
+            vomsAttributes = GrDPX509Util.getVOMSAttributes(certs);
+        }catch (Exception e){
+            if(requireVomsAttrs){
+                throw new DelegationException("Failed to get required VOMS attributes " + e.getClass() + " " + e.getMessage(), e);
+            } else {
+                LOGGER.warn("VOMS attribute retrieval failed, but they are not required, so continuing. Error was: " + e.getClass() + " " + e.getMessage(), e);
+            }
+        }
 
         if (requireVomsAttrs) {
             if (vomsAttributes == null || vomsAttributes.length == 0) {
-                throw new DelegationException("Failed to get required voms attributes.");
+                throw new DelegationException("Failed to get required VOMS attributes.");
             }
             for (String attribute : vomsAttributes) {
                 if (attribute == null || attribute.length() == 0) {
-                    throw new DelegationException("Invalid empty voms attribute found.");
+                    throw new DelegationException("Invalid empty VOMS attribute found.");
                 }
             }
 

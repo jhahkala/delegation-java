@@ -27,14 +27,11 @@ public class DelegationException extends Exception {
      */
     private static final long serialVersionUID = -8514894331115505968L;
     
-    /** The cause of the delegation exception on the server side. */
-    private String msg;
-
     /**
      * The default constructor.
      */
     public DelegationException() {
-        // empty on purpose
+        super();
     }
 
     /**
@@ -42,7 +39,11 @@ public class DelegationException extends Exception {
      * @param msg The error message.
      */
     public DelegationException(String msg) {
-        this.msg = msg;
+        super(msg);
+    }
+    
+    public DelegationException(String message, Throwable t){
+        super(message, t);
     }
 
 
@@ -50,9 +51,10 @@ public class DelegationException extends Exception {
      * Gets the msg value for this DelegationException.
      * 
      * @return msg The cause of the delegation exception on the server side.
+     * @deprecated user getMessage as for other exceptions.
      */
     public String getMsg() {
-        return msg;
+        return getMessage();
     }
 
 
@@ -60,9 +62,10 @@ public class DelegationException extends Exception {
      * Sets the msg value for this DelegationException.
      * 
      * @param msg The cause of the delegation exception on the server side.
+     * @deprecated set the message in the constructor as usual for exceptions.
      */
     public void setMsg(String msg) {
-        this.msg = msg;
+        throw new RuntimeException("Setting exception messages is unsupported, set the message when using the constructor.");
     }
 
 }

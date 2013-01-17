@@ -38,7 +38,7 @@ import org.apache.log4j.Logger;
 import org.bouncycastle.jce.PKCS10CertificationRequest;
 import org.bouncycastle.openssl.PEMReader;
 import org.bouncycastle.openssl.PEMWriter;
-import org.glite.security.delegation.CertInfoTuple;
+import org.glite.security.delegation.CertInfoTriple;
 import org.glite.security.delegation.GrDPX509Util;
 import org.glite.security.delegation.GrDProxyDlgeeOptions;
 import org.glite.security.delegation.DelegationException;
@@ -174,9 +174,9 @@ public class GliteDelegation {
             logger.error("Service is misconfigured. Stopping execution.");
             throw new DelegationException("Service is misconfigured.");
         }
-        CertInfoTuple info = null;
+        CertInfoTriple info = null;
         try{
-            info = new CertInfoTuple(certs, requireVomsAttrs);
+            info = new CertInfoTriple(certs, requireVomsAttrs);
         } catch(Exception e){
             logger.error("Getting info from the certificate chain failed: " + e.getClass() + " " + e.getMessage());
             throw new DelegationException("Getting info from the certificate chain failed: " + e.getClass() + " " + e.getMessage());
@@ -238,7 +238,7 @@ public class GliteDelegation {
             throw new DelegationException("Service is misconfigured.");
         }
 
-        CertInfoTuple info = new CertInfoTuple(certs, requireVomsAttrs);
+        CertInfoTriple info = new CertInfoTriple(certs, requireVomsAttrs);
 
         logger.debug("Got get new proxy req request from client '" + info.dn + "'");
 
@@ -301,7 +301,7 @@ public class GliteDelegation {
             throw new DelegationException("Service is misconfigured.");
         }
 
-        CertInfoTuple info = new CertInfoTuple(certs, requireVomsAttrs);
+        CertInfoTriple info = new CertInfoTriple(certs, requireVomsAttrs);
 
         logger.debug("Got renew proxy request from client '" + info.dn + "'");
 
@@ -353,7 +353,7 @@ public class GliteDelegation {
             throw new DelegationException("No proxy was given.");
         }
 
-        CertInfoTuple info = new CertInfoTuple(certs, requireVomsAttrs);
+        CertInfoTriple info = new CertInfoTriple(certs, requireVomsAttrs);
 
         logger.debug("Got put proxy request from client '" + info.dn + "'");
 
@@ -561,7 +561,7 @@ public class GliteDelegation {
             throw new DelegationException("Service is misconfigured.");
         }
 
-        CertInfoTuple info = new CertInfoTuple(certs, requireVomsAttrs);
+        CertInfoTriple info = new CertInfoTriple(certs, requireVomsAttrs);
 
         // Generate a delegation id from the client DN and VOMS attributes
         if (delegationID == null || delegationID.length() == 0) {
@@ -611,7 +611,7 @@ public class GliteDelegation {
             throw new DelegationException("Service is misconfigured.");
         }
 
-        CertInfoTuple info = new CertInfoTuple(certs, requireVomsAttrs);
+        CertInfoTriple info = new CertInfoTriple(certs, requireVomsAttrs);
 
         // Generate a delegation id from the client DN and VOMS attributes
         if (delegationID == null || delegationID.length() == 0) {

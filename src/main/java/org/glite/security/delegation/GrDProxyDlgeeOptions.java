@@ -26,15 +26,15 @@ import java.io.InputStream;
 
 import java.util.Properties;
 
-
 /**
  * Options manager for Delegatee (service) side
  */
 public class GrDProxyDlgeeOptions {
-	
-	// The local logger object
-//    private static Logger logger = Logger.getLogger(GrDProxyDlgeeOptions.class);
-	
+
+    // The local logger object
+    // private static Logger logger =
+    // Logger.getLogger(GrDProxyDlgeeOptions.class);
+
     private String dlgeeDN = null;
     private String dlgeePass = null;
     private String delegationStorage = null;
@@ -42,36 +42,39 @@ public class GrDProxyDlgeeOptions {
     private String dlgeeStorageDbPool = null;
     private String proxyFile = null;
     private int dlgeeKeySize = -1;
+    private boolean requireVomsAttributes = true;
 
     /**
      * Constructor of class
+     * 
      * @param filename file containing delegatee options
      */
     public GrDProxyDlgeeOptions(String filename) throws IOException {
-    	
-    	InputStream st = null;
-    	try {
-    		st = new FileInputStream(filename);
-    	} catch(FileNotFoundException e) {
-    	    // fail silently, try resource next.
-    		
-    	}
-    	
-    	if(st == null) {
-    		st = GrDProxyDlgeeOptions.class.getClassLoader().getResourceAsStream(filename);
-    	}
-    	
-    	Properties props = new Properties();
-    	props.load(st);
-    	init(props);
+
+        InputStream st = null;
+        try {
+            st = new FileInputStream(filename);
+        } catch (FileNotFoundException e) {
+            // fail silently, try resource next.
+
+        }
+
+        if (st == null) {
+            st = GrDProxyDlgeeOptions.class.getClassLoader().getResourceAsStream(filename);
+        }
+
+        Properties props = new Properties();
+        props.load(st);
+        init(props);
     }
-    
+
     /**
      * Constructor of class
+     * 
      * @param props Properties object containing necessary values
      */
     public GrDProxyDlgeeOptions(Properties props) {
-    	init(props);
+        init(props);
     }
 
     /**
@@ -93,10 +96,15 @@ public class GrDProxyDlgeeOptions {
         this.dlgeeStorageFactory = props.getProperty("dlgeeStorageFactory");
         this.dlgeeStorageDbPool = props.getProperty("dlgeeStorageDbPool");
         this.dlgeeKeySize = Integer.parseInt(props.getProperty("dlgeeKeySize"));
+        String reqString = props.getProperty("requireVomsAttributes");
+        if(reqString != null){
+            requireVomsAttributes = Boolean.parseBoolean(reqString);
+        }
     }
 
     /**
      * Getting delegatee's DN
+     * 
      * @return the DN
      */
     public String getDlgeeDN() {
@@ -105,6 +113,7 @@ public class GrDProxyDlgeeOptions {
 
     /**
      * Getting delegatee's password
+     * 
      * @return password assigned to delegatee
      */
     public String getDlgeePass() {
@@ -113,6 +122,7 @@ public class GrDProxyDlgeeOptions {
 
     /**
      * Getting the name of proxy file
+     * 
      * @return certificat proxy file name
      */
     public String getDlgeeProxyFile() {
@@ -124,17 +134,19 @@ public class GrDProxyDlgeeOptions {
 
     /**
      * Getting path to the storage of Proxy certificates
+     * 
      * @return path to proxy certificates
      */
     public String getDlgeeStorage() {
         if (this.delegationStorage == null)
             return ("\tmp");
-        
+
         return this.delegationStorage;
     }
-    
+
     /**
      * Getting the type of Storage Type used by the DLGEE
+     * 
      * @return type of Storage Type used by the DLGEE
      */
     public String getDlgeeStorageFactory() {
@@ -143,22 +155,34 @@ public class GrDProxyDlgeeOptions {
 
     /**
      * Getting the pool name of the db storage
+     * 
      * @return pool name of the db storage
      */
     public String getDlgeeStorageDbPool() {
         return this.dlgeeStorageDbPool;
     }
-    
+
     /**
      * Get the key size to be used
+     * 
      * @return Key size to be used
      */
     public int getDlgeeKeySize() {
         return this.dlgeeKeySize;
     }
-    
+
+    /**
+     * check whether the voms attributes are required or not.
+     * 
+     * @return whether the voms attributes are required.
+     */
+    public boolean isRequireVomsAttributes() {
+        return requireVomsAttributes;
+    }
+
     /**
      * setting delegatee's DN
+     * 
      * @param dn DN
      */
     public void setDlgeeDN(String dn) {
@@ -167,6 +191,7 @@ public class GrDProxyDlgeeOptions {
 
     /**
      * setting delegatee's password
+     * 
      * @param dgp delegatee password
      */
     public void setDlgeePass(String dgp) {
@@ -175,6 +200,7 @@ public class GrDProxyDlgeeOptions {
 
     /**
      * setting the name of proxy file
+     * 
      * @param pf proxy file
      */
     public void setDlgeeProxyFile(String pf) {
@@ -183,33 +209,49 @@ public class GrDProxyDlgeeOptions {
 
     /**
      * setting path to the storage of Proxy certificates
+     * 
      * @param stg storage
      */
     public void setDlgeeStorage(String stg) {
         this.delegationStorage = stg;
     }
-    
+
     /**
      * Setting the storage type being used by the DLGEE
+     * 
      * @param stgType storage type
      */
     public void setDlgeeStorageFactory(String stgType) {
         this.dlgeeStorageFactory = stgType;
     }
-    
+
     /**
      * Setting the storage db pool name
+     * 
      * @param stgDbPool storage pool name
      */
     public void setDlgeeStorageDbPool(String stgDbPool) {
         this.dlgeeStorageDbPool = stgDbPool;
     }
-    
+
     /**
      * Setting generated delegation key size.
-     * @param keySize   the key size in bits
+     * 
+     * @param keySize the key size in bits
      */
     public void setDlgeeKeySize(int keySize) {
         this.dlgeeKeySize = keySize;
+    }
+
+    /**
+     * Set whether VOMS attribute presence is required in the certificate chain
+     * that initializes the delegation process.
+     * 
+     * @param required true if voms attributes are required, false if lack of
+     *            attributes is accepted as well as failure to extract the
+     *            attributes. Default is true.
+     */
+    public void setRequireVomsAttributes(boolean required) {
+        requireVomsAttributes = required;
     }
 }

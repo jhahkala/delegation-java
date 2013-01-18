@@ -20,28 +20,28 @@ package org.glite.security.delegation.storage;
 import org.glite.security.delegation.GrDProxyDlgeeOptions;
 
 /**
- * Allows creates of new instances of the filesystem implementation of the GrDPStorage interface.
+ * Allows creates of new instances of the filesystem implementation of the
+ * GrDPStorage interface.
  */
 public class GrDPStorageFilesystemFactory extends GrDPStorageFactory {
-	
-	/**
-	 * Creates a new GrDPStorage instance and returns it to the user.
-	 *
-	 * The actual instance created is a GrDPStorageFilesystem object.
-	 *
-	 * @return The storage object that interfaces the storage backend.
-	 */
-	public GrDPStorage createGrDPStorage(
-                    GrDProxyDlgeeOptions dlgeeOptions) throws GrDPStorageException {
-		// Make sure the class is loaded
+
+    /**
+     * Creates a new GrDPStorage instance and returns it to the user.
+     * 
+     * The actual instance created is a GrDPStorageFilesystem object.
+     * 
+     * @return The storage object that interfaces the storage backend.
+     */
+    public GrDPStorage createGrDPStorage(GrDProxyDlgeeOptions dlgeeOptions) throws GrDPStorageException {
+        // Make sure the class is loaded
         try {
             Class.forName(GrDPStorageFilesystem.class.getName());
         } catch (ClassNotFoundException e) {
             throw new GrDPStorageException("Failed to find '" + GrDPStorageFilesystem.class.getName()
                     + "' in classpath.");
         }
-		// Return a new instance of the class
-		return new GrDPStorageFilesystem(dlgeeOptions);
-	}
-	
+        // Return a new instance of the class
+        return new GrDPStorageFilesystem(dlgeeOptions);
+    }
+
 }

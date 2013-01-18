@@ -136,6 +136,8 @@ public class GliteDelegation {
             m_bad_config = true;
             return;
         }
+        
+        requireVomsAttrs = dlgeeOpt.isRequireVomsAttributes();
 
         // Set the size of the key, if not defined or smaller than the default,
         // use default.

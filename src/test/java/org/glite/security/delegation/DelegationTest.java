@@ -19,9 +19,6 @@ public class DelegationTest extends TestCase {
 
     public void testDelegation() throws Exception {
         
-        // for testing purposes
-        GliteDelegation.requireVomsAttrs = false;
-
         Logger LOGGERRoot = Logger.getLogger("org.glite.security");
         Layout lay = new PatternLayout("%d{ISO8601} %-5p [%t] %l %x - %m%n");
         Appender appender = new ConsoleAppender(lay);
@@ -36,6 +33,8 @@ public class DelegationTest extends TestCase {
         opts.setDlgeeKeySize(2048);
         opts.setDlgeeStorage("target");
         opts.setDlgeeStorageFactory("org.glite.security.delegation.storage.GrDPStorageFilesystemFactory");
+        // for testing purposes
+        opts.setRequireVomsAttributes(false);
 
         GliteDelegation delegation = new GliteDelegation(opts);
         X509Credential credential = new PEMCredential(proxyfile, (char[]) null);

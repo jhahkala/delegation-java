@@ -32,7 +32,9 @@ import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateExpiredException;
 import java.security.cert.CertificateNotYetValidException;
 import java.security.cert.X509Certificate;
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.List;
 
 import org.apache.log4j.Logger;
 import org.bouncycastle.jce.PKCS10CertificationRequest;
@@ -48,10 +50,29 @@ import org.glite.security.delegation.storage.GrDPStorageCacheElement;
 import org.glite.security.delegation.storage.GrDPStorageElement;
 import org.glite.security.delegation.storage.GrDPStorageException;
 import org.glite.security.delegation.storage.GrDPStorageFactory;
+import org.italiangrid.voms.VOMSAttribute;
+import org.italiangrid.voms.VOMSValidators;
+import org.italiangrid.voms.ac.VOMSACValidator;
+import org.italiangrid.voms.ac.VOMSValidationResult;
+import org.italiangrid.voms.error.VOMSValidationErrorMessage;
+import org.italiangrid.voms.store.VOMSTrustStore;
+import org.italiangrid.voms.store.VOMSTrustStores;
 
+import eu.emi.security.authn.x509.CrlCheckingMode;
+import eu.emi.security.authn.x509.NamespaceCheckingMode;
+import eu.emi.security.authn.x509.OCSPParametes;
+import eu.emi.security.authn.x509.ProxySupport;
+import eu.emi.security.authn.x509.RevocationParameters;
+import eu.emi.security.authn.x509.StoreUpdateListener;
+import eu.emi.security.authn.x509.ValidationError;
+import eu.emi.security.authn.x509.ValidationErrorListener;
+import eu.emi.security.authn.x509.RevocationParameters.RevocationCheckingOrder;
+import eu.emi.security.authn.x509.StoreUpdateListener.Severity;
 import eu.emi.security.authn.x509.impl.CertificateUtils;
 import eu.emi.security.authn.x509.impl.CertificateUtils.Encoding;
 import eu.emi.security.authn.x509.impl.KeyAndCertCredential;
+import eu.emi.security.authn.x509.impl.OpensslCertChainValidator;
+import eu.emi.security.authn.x509.impl.ValidatorParams;
 import eu.emi.security.authn.x509.impl.X500NameUtils;
 import eu.emi.security.authn.x509.proxy.ProxyCSR;
 import eu.emi.security.authn.x509.proxy.ProxyCSRGenerator;
@@ -82,7 +103,7 @@ public class GliteDelegation {
      * Set at instantiation time. Remains false if a bad configuration set was
      * found.
      */
-    private boolean m_bad_config = false;
+    private boolean m_bad_config = true;
 
     /** Local object interfacing the storage area. */
     private GrDPStorage m_storage = null;
@@ -94,7 +115,12 @@ public class GliteDelegation {
      * whether the presence of voms attributes will be required in the incoming
      * certificate chains.
      */
-    public static boolean requireVomsAttrs = true;
+    private static boolean requireVomsAttrs = true;
+    
+    /**
+     * The voms validator instance used to validate the voms attribute certificates.
+     */
+    private static VOMSACValidator vomsValidator = null;
 
     /**
      * Loads the DLGEE properties from the default config file and calls the
@@ -145,8 +171,97 @@ public class GliteDelegation {
         if (m_keySize == -1 || m_keySize < DEFAULT_KEY_SIZE) {
             m_keySize = DEFAULT_KEY_SIZE;
         }
-    }
+        
+        VOMSTrustStore vomsTrustStore = null;
+        String vomsDirString = dlgeeOpt.getVomsDir();
+        if(vomsDirString != null){
+            List<String> trustDirStrings = new ArrayList<String>();
+            trustDirStrings.add(vomsDirString);
+            vomsTrustStore = VOMSTrustStores.newTrustStore(trustDirStrings);
+        } else {
+            vomsTrustStore = VOMSTrustStores.newTrustStore();
+        }
+        
+        StoreUpdateListener listener = new StoreUpdateListener() {
+            public void loadingNotification(String location, String type, Severity level, Exception cause) {
+                if (level != Severity.NOTIFICATION) {
+                    logger.error("Error when creating or using SSL socket. Type " + type + " level: " + level
+                            + ((cause == null) ? "" : (" cause: " + cause.getClass() + ":" + cause.getMessage())));
+                } else {
+                    // log successful (re)loading
+                }
+            }
+        };
 
+        ArrayList<StoreUpdateListener> listenerList = new ArrayList<StoreUpdateListener>();
+        listenerList.add(listener);
+
+        RevocationParameters revParam = new RevocationParameters(CrlCheckingMode.REQUIRE, new OCSPParametes(), false,
+                RevocationCheckingOrder.CRL_OCSP);
+        String crlCheckingMode = dlgeeOpt.getRevocationChecking();
+        if (crlCheckingMode != null) {
+            if (crlCheckingMode.equalsIgnoreCase("ifvalid")) {
+                revParam = new RevocationParameters(CrlCheckingMode.IF_VALID, new OCSPParametes(), false,
+                        RevocationCheckingOrder.CRL_OCSP);
+            }
+            if (crlCheckingMode.equalsIgnoreCase("ignore")) {
+                revParam = new RevocationParameters(CrlCheckingMode.IGNORE, new OCSPParametes(), false,
+                        RevocationCheckingOrder.CRL_OCSP);
+            }
+        }
+
+        ValidatorParams validatorParams = new ValidatorParams(revParam, ProxySupport.ALLOW, listenerList);
+
+        String trustStoreLocation = dlgeeOpt.getVomsCAs();
+        if (trustStoreLocation == null) {
+            trustStoreLocation = "/etc/grid-security/certificates";
+        }
+
+        String namespaceModeString = dlgeeOpt.getNamespace();
+        NamespaceCheckingMode namespaceMode = NamespaceCheckingMode.EUGRIDPMA_AND_GLOBUS;
+        if (namespaceModeString != null) {
+            if (namespaceModeString.equalsIgnoreCase("no") || namespaceModeString.equalsIgnoreCase("false")
+                    || namespaceModeString.equalsIgnoreCase("off")) {
+                namespaceMode = NamespaceCheckingMode.IGNORE;
+            } else {
+                if (namespaceModeString.equalsIgnoreCase("require")) {
+                    namespaceMode = NamespaceCheckingMode.EUGRIDPMA_AND_GLOBUS_REQUIRE;
+                }
+            }
+
+        }
+
+        String intervalString = dlgeeOpt.getUpdateInterval();
+        long intervalMS = 3600000; // update every hour
+        if (intervalString != null) {
+            intervalMS = Long.parseLong(intervalString);
+        }
+
+        OpensslCertChainValidator validator = new OpensslCertChainValidator(trustStoreLocation, namespaceMode,
+                intervalMS, validatorParams);
+
+        ValidationErrorListener validationListener = new ValidationErrorListener() {
+            @Override
+            public boolean onValidationError(ValidationError error) {
+                logger.info("Error when validating incoming certificate: " + error.getMessage() + " position: "
+                        + error.getPosition() + " " + error.getParameters());
+                X509Certificate chain[] = error.getChain();
+                for (X509Certificate cert : chain) {
+                    logger.info(cert.toString());
+                }
+                return false;
+            }
+
+        };
+
+        validator.addValidationListener(validationListener);
+        
+        vomsValidator = VOMSValidators.newValidator(vomsTrustStore, validator);
+        
+        // set the config ok flag
+        m_bad_config = false;
+    }
+    
     /**
      * Generates a new proxy certificate proxy request based on the client DN
      * and voms attributes in SecurityContext. Also checks if the request with
@@ -178,13 +293,16 @@ public class GliteDelegation {
         }
         CertInfoTriple info = null;
         try{
-            info = new CertInfoTriple(certs, requireVomsAttrs);
+            info = new CertInfoTriple(certs, vomsValidator, requireVomsAttrs);
         } catch(Exception e){
-            logger.error("Getting info from the certificate chain failed: " + e.getClass() + " " + e.getMessage());
-            throw new DelegationException("Getting info from the certificate chain failed: " + e.getClass() + " " + e.getMessage());
+            logger.error("Getting info from the certificate chain failed: " + e.getClass() + " " + e.getMessage(), e);
+            throw new DelegationException("Getting info from the certificate chain failed: " + e.getClass() + " " + e.getMessage(), e);
         }
 
-        logger.debug("Got get proxy req request from client '" + info.dn + "', getting VOMS attributes.");
+        logger.debug("Got get proxy req request from client '" + info.dn + "', got " + info.vomsAttributes.length + " VOMS attributes : " + info.vomsAttributes);
+        for(String attrib:info.vomsAttributes){
+            logger.debug("Voms attrib : " + attrib);
+        }
 
         // Generate a delegation id from the client DN and VOMS attributes
         if (delegationID == null || delegationID.length() == 0) {
@@ -240,7 +358,7 @@ public class GliteDelegation {
             throw new DelegationException("Service is misconfigured.");
         }
 
-        CertInfoTriple info = new CertInfoTriple(certs, requireVomsAttrs);
+        CertInfoTriple info = new CertInfoTriple(certs, vomsValidator, requireVomsAttrs);
 
         logger.debug("Got get new proxy req request from client '" + info.dn + "'");
 
@@ -303,7 +421,7 @@ public class GliteDelegation {
             throw new DelegationException("Service is misconfigured.");
         }
 
-        CertInfoTriple info = new CertInfoTriple(certs, requireVomsAttrs);
+        CertInfoTriple info = new CertInfoTriple(certs, vomsValidator, requireVomsAttrs);
 
         logger.debug("Got renew proxy request from client '" + info.dn + "'");
 
@@ -355,7 +473,7 @@ public class GliteDelegation {
             throw new DelegationException("No proxy was given.");
         }
 
-        CertInfoTriple info = new CertInfoTriple(certs, requireVomsAttrs);
+        CertInfoTriple info = new CertInfoTriple(certs, vomsValidator, requireVomsAttrs);
 
         logger.debug("Got put proxy request from client '" + info.dn + "'");
 
@@ -563,7 +681,7 @@ public class GliteDelegation {
             throw new DelegationException("Service is misconfigured.");
         }
 
-        CertInfoTriple info = new CertInfoTriple(certs, requireVomsAttrs);
+        CertInfoTriple info = new CertInfoTriple(certs, vomsValidator, requireVomsAttrs);
 
         // Generate a delegation id from the client DN and VOMS attributes
         if (delegationID == null || delegationID.length() == 0) {
@@ -613,7 +731,7 @@ public class GliteDelegation {
             throw new DelegationException("Service is misconfigured.");
         }
 
-        CertInfoTriple info = new CertInfoTriple(certs, requireVomsAttrs);
+        CertInfoTriple info = new CertInfoTriple(certs, vomsValidator, requireVomsAttrs);
 
         // Generate a delegation id from the client DN and VOMS attributes
         if (delegationID == null || delegationID.length() == 0) {

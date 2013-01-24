@@ -1,8 +1,14 @@
 package org.glite.security.delegation;
 
 import java.security.cert.X509Certificate;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.log4j.Logger;
+import org.italiangrid.voms.VOMSAttribute;
+import org.italiangrid.voms.ac.VOMSACValidator;
+import org.italiangrid.voms.ac.VOMSValidationResult;
+import org.italiangrid.voms.error.VOMSValidationErrorMessage;
 
 import eu.emi.security.authn.x509.impl.X500NameUtils;
 import eu.emi.security.authn.x509.proxy.ProxyUtils;
@@ -37,7 +43,7 @@ public class CertInfoTriple {
      *             end entity certificate is found, no end entity DN is found or
      *             voms attributes are required, but not found or invalid.
      */
-    public CertInfoTriple(X509Certificate certs[], boolean requireVomsAttrs) throws DelegationException {
+    public CertInfoTriple(X509Certificate certs[], VOMSACValidator validator, boolean requireVomsAttrs) throws DelegationException {
         if (certs == null) {
             throw new DelegationException("No certificates given.");
         }
@@ -56,7 +62,7 @@ public class CertInfoTriple {
         }
 
         try{
-            vomsAttributes = GrDPX509Util.getVOMSAttributes(certs);
+            vomsAttributes = getVomsAttributes(certs, validator);
         }catch (Exception e){
             if(requireVomsAttrs){
                 throw new DelegationException("Failed to get required VOMS attributes " + e.getClass() + " " + e.getMessage(), e);
@@ -77,4 +83,39 @@ public class CertInfoTriple {
 
         }
     }
+    
+    /**
+     * Uses the given voms validator to validate and extract the voms attributes from the certificate chain.
+     * 
+     * @param certs the chain to treat.
+     * @return The validates attributes.
+     * @throws DelegationException Thrown in case the voms AC validation fails.
+     */
+    public String[] getVomsAttributes(X509Certificate certs[], VOMSACValidator validator) throws DelegationException{
+        
+        List<VOMSValidationResult> results = validator.validateWithResult(certs);
+        
+        ArrayList<String> attributeList = new ArrayList<String>();
+
+        for(VOMSValidationResult r: results){
+
+            if ( r.isValid() ){
+                VOMSAttribute attrs = r.getAttributes();
+                for (String attribute : attrs.getFQANs()){
+                    attributeList.add(attribute);
+                }
+            }else{
+                String error = "";
+                for(VOMSValidationErrorMessage errorMessage : r.getValidationErrors()){
+                    error = error + ", " + errorMessage;
+                }
+                throw new DelegationException("Error(s) while getting VOMS attributes: " + error);
+            }
+        }        
+        
+        return attributeList.toArray(new String[attributeList.size()]);
+        
+    }
+
+
 }

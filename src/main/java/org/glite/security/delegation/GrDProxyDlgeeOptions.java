@@ -43,6 +43,11 @@ public class GrDProxyDlgeeOptions {
     private String proxyFile = null;
     private int dlgeeKeySize = -1;
     private boolean requireVomsAttributes = true;
+    private String vomsDir = null;
+    private String vomsCAs = null;
+    private String revocationChecking = null;
+    private String namespace = null;
+    private String updateInterval = null;
 
     /**
      * Constructor of class
@@ -100,6 +105,12 @@ public class GrDProxyDlgeeOptions {
         if(reqString != null){
             requireVomsAttributes = Boolean.parseBoolean(reqString);
         }
+        this.vomsDir = props.getProperty("vomsDir");
+        this.vomsCAs = props.getProperty("vomsCAs");
+        this.revocationChecking = props.getProperty("revocationChecking");
+        this.namespace = props.getProperty("namespace");
+        this.updateInterval = props.getProperty("updateInterval");
+        
     }
 
     /**
@@ -253,5 +264,83 @@ public class GrDProxyDlgeeOptions {
      */
     public void setRequireVomsAttributes(boolean required) {
         requireVomsAttributes = required;
+    }
+
+    /**
+     * Gets the directory to get the lsc files from.
+     * 
+     * @return the vomsDir
+     */
+    public String getVomsDir() {
+        return vomsDir;
+    }
+
+    /**
+     * Sets the directory to get the lsc files from.
+     * 
+     * @param vomsDir the vomsDir to set
+     */
+    public void setVomsDir(String vomsDir) {
+        this.vomsDir = vomsDir;
+    }
+
+    /**
+     * Gets the directory where the CA files for checking the voms AC are loaded from.
+     * 
+     * @return the vomsTrustStore
+     */
+    public String getVomsCAs() {
+        return vomsCAs;
+    }
+
+    /**
+     * Sets the directory where the CA files for checking the voms AC are loaded from.
+     * 
+     * @param vomsTrustStore the vomsTrustStore to set
+     */
+    public void setVomsCAs(String vomsCAs) {
+        this.vomsCAs = vomsCAs;
+    }
+
+    /**
+     * @return the revocationChecking
+     */
+    public String getRevocationChecking() {
+        return revocationChecking;
+    }
+
+    /**
+     * @param revocationChecking the revocationChecking to set
+     */
+    public void setRevocationChecking(String revocationChecking) {
+        this.revocationChecking = revocationChecking;
+    }
+
+    /**
+     * @return the namespace
+     */
+    public String getNamespace() {
+        return namespace;
+    }
+
+    /**
+     * @param namespace the namespace to set
+     */
+    public void setNamespace(String namespace) {
+        this.namespace = namespace;
+    }
+
+    /**
+     * @return the updateInterval
+     */
+    public String getUpdateInterval() {
+        return updateInterval;
+    }
+
+    /**
+     * @param updateInterval the updateInterval to set
+     */
+    public void setUpdateInterval(String updateInterval) {
+        this.updateInterval = updateInterval;
     }
 }

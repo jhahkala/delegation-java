@@ -408,6 +408,7 @@ public class GrDPX509Util {
      * @param sc The SecurityContext object from which to take the attributes
      * @return A String list containing the attributes. Empty (0 element) array
      *         if no attributes.
+     * @deprecated use the method getVomsAttributes in the GliteDelegation that does the validation properly and is configurable.
      */
     public static String[] getVOMSAttributes(X509Certificate certs[]) {
         if (vomsValidator == null){

@@ -53,6 +53,7 @@ public class GrDPX509Util {
     public static final String CERT_REQ_CONTENT_TYPE = "application/x-x509-cert-request";
     private static MessageDigest s_digester = null;
     private static VOMSACValidator vomsValidator = null;
+    public static boolean windows = System.getProperty("os.name").startsWith("Windows");
 
     static {
         try {
@@ -61,7 +62,7 @@ public class GrDPX509Util {
             LOGGER.fatal("Message digester implementation not found: " + e.getMessage(), e);
             throw new RuntimeException("Delegation utilities code initialization failed: " + e.getMessage(), e);
         }
-
+        
     }
 
     /**
@@ -78,13 +79,17 @@ public class GrDPX509Util {
 
     /**
      * Change the access mode of a file in the filesystem (!!! system specific
-     * !!!).
+     * !!!). I windows this method just returns with true.
      * 
      * @param file Location of the file to be changed.
      * @param mode New mode for the file.
      * @return True if file mode has changed.
      */
     public static boolean changeFileMode(String file, int mode) {
+    	// in windows we can't change the mode, so skip
+    	if(windows){
+    		return true;
+    	}
         Runtime runtime = Runtime.getRuntime();
         String[] cmd = new String[] { "chmod", String.valueOf(mode), file };
 

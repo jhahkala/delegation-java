@@ -17,7 +17,7 @@
 
 name=delegation-java
 
-version=3.0.5
+version=3.0.6
 release=1
 
 prefix=/

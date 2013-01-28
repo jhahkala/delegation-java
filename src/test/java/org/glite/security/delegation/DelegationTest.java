@@ -117,7 +117,7 @@ public class DelegationTest extends TestCase {
         delegation.putProxy(delegationId, certString, certChain);
 
         // remove delegation in the end
-//        delegation.destroy(delegationId, certChain);
+        delegation.destroy(delegationId, certChain);
 
     }
 
@@ -170,7 +170,7 @@ public class DelegationTest extends TestCase {
         delegation.putProxy(delegationId, certString, certChain);
 
         // remove delegation in the end
-//        delegation.destroy(delegationId, certChain);
+        delegation.destroy(delegationId, certChain);
 
     }
 

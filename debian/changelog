@@ -1,5 +1,5 @@
-libdelegation-java (3.0.5-1) unstable; urgency=low
+libdelegation-java (3.0.6-1) unstable; urgency=low
 
   * Initial release for Debian 
 
- -- Joni Hahkala <joni.hahkala@cern.ch>  01 Jan 2013 2012 17:42:59 +0200
+ -- Joni Hahkala <joni.hahkala@cern.ch>  Mon, 28 Jan 2013 17:42:59 +0200

@@ -21,7 +21,6 @@ import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.StringBufferInputStream;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.security.GeneralSecurityException;
@@ -129,6 +128,8 @@ public class GliteDelegation {
      * Creates a new storage handler instance (implementation depending on configuration) to be used later.
      * 
      * Sets the value of the key size as defined in the configuration.
+     * 
+     * Creates the voms validator to be used for extracting the voms attributes from the given certificate chain.
      * 
      * @param dlgeeOpt the options object for configuring the delegation receiver.
      */
@@ -259,10 +260,12 @@ public class GliteDelegation {
     }
 
     /**
-     * Generates a new proxy certificate proxy request based on the client DN and voms attributes in SecurityContext.
-     * Also checks if the request with given (or generated if not given) id already exists.
+     * Generates a new proxy request based on the certificates and the possibly given delegation id. Also checks if
+     * a delegation with given (or generated if not given) id for the user already exists. If a delegation with given id
+     * and user already exists, it throws a delegation exception. To renew existing delegation, use renewProxyReq.
      * 
-     * @param inDelegationID The delegation id used.
+     * @param inDelegationID The delegation id to use (generated if not present, based on dn and possible VOMS
+     *            attributes).
      * @param certs The certificates the user used to authenticate himself.
      * @return The generated Proxy request in PEM encoding.
      * @throws DelegationException Thrown in case of failures.
@@ -333,10 +336,14 @@ public class GliteDelegation {
     }
 
     /**
-     * Generates a new proxy request object based on the DN and voms attributes in the security context. Also checks if
-     * the request with given (or generated if not given) id already exists.
+     * Generates a new proxy request based on the certificates and the possibly given delegation id. Also checks if
+     * a delegation with given (or generated if not given) id for the user already exists. If a delegation with given id
+     * and user already exists, it throws a delegation exception. To renew existing delegation, use renewProxyReq.
      * 
-     * @param inDelegationID the delegation id to use, will be generated if not given.
+     * This method also returns the given or generated delegation ID.
+     * 
+     * @param inDelegationID the delegation id to use, will be generated (based on dn and VOMS attributes if present) if
+     *            not given.
      * @param certs The certificates the user used to authenticate himself.
      * @return The newProxyReq object.
      * @throws DelegationException thrown in case of failure.
@@ -397,7 +404,8 @@ public class GliteDelegation {
     /**
      * Generates a new delegation request for the existing delegation with the given (or generated) delegation.
      * 
-     * @param inDelegationID The delegation id to use, will be genarated if not given.
+     * @param inDelegationID The delegation id to use, will be generated (based on dn and VOMS attributes if present) if
+     *            not given.
      * @param certs The certificates the user used to authenticate himself.
      * @return The delegation request in PEM format.
      * @throws DelegationException Thrown in case of failure.

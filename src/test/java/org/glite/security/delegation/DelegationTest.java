@@ -1,14 +1,13 @@
 package org.glite.security.delegation;
 
+import java.io.ByteArrayInputStream;
+import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 
-import org.apache.log4j.Appender;
-import org.apache.log4j.ConsoleAppender;
-import org.apache.log4j.Layout;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
-import org.apache.log4j.PatternLayout;
 import org.glite.security.delegation.impl.GliteDelegation;
+import org.glite.security.delegation.storage.GrDPStorage;
+import org.glite.security.delegation.storage.GrDPStorageElement;
+import org.glite.security.delegation.storage.GrDPStorageFactory;
 
 import eu.emi.security.authn.x509.X509Credential;
 import eu.emi.security.authn.x509.impl.PEMCredential;
@@ -19,11 +18,11 @@ public class DelegationTest extends TestCase {
 
     public void testDelegationWithoutVoms() throws Exception {
         
-        Logger LOGGERRoot = Logger.getLogger("org.glite.security");
-        Layout lay = new PatternLayout("%d{ISO8601} %-5p [%t] %l %x - %m%n");
-        Appender appender = new ConsoleAppender(lay);
-        LOGGERRoot.addAppender(appender);
-        LOGGERRoot.setLevel(Level.DEBUG);
+//        Logger LOGGERRoot = Logger.getLogger("org.glite.security");
+//        Layout lay = new PatternLayout("%d{ISO8601} %-5p [%t] %l %x - %m%n");
+//        Appender appender = new ConsoleAppender(lay);
+//        LOGGERRoot.addAppender(appender);
+//        LOGGERRoot.setLevel(Level.DEBUG);
 
         String proxyfile = "src/test/certs/trusted_client.proxy.grid_proxy";
         String delegationId = "testID";
@@ -49,8 +48,6 @@ public class DelegationTest extends TestCase {
         }
         
         String req = delegation.getProxyReq(delegationId, certChain);
-        System.out.println(req);
-
         
         // client side new proxy signing
         GrDProxyDlgorOptions dopts = new GrDProxyDlgorOptions();
@@ -58,23 +55,36 @@ public class DelegationTest extends TestCase {
 
         DelegationHandler handler = new DelegationHandler(req, delegationId, dopts);
         String certString = handler.getPEMProxyCertificate();
-        System.out.println(certString);
 
         // server side new proxy storage
         delegation.putProxy(delegationId, certString, certChain);
 
+        GrDPStorageFactory stgFactory = GrDPX509Util.getGrDPStorageFactory(opts.getDlgeeStorageFactory());
+        GrDPStorage storage = stgFactory.createGrDPStorage(opts);
+        CertInfoTriple info = new CertInfoTriple(certChain, null, false);
+        
+        GrDPStorageElement element = storage.findGrDPStorageElement(delegationId, info.dn);
+        
+        PEMCredential newCredential = new PEMCredential(new ByteArrayInputStream(element.getCertificate().getBytes()), (char[])null);
+        
+        X509Certificate newChain[] = newCredential.getCertificateChain();
+        PrivateKey newKey = newCredential.getKey();
+        
+//        newChain[0].getPublicKey()
+//        ((RSAPrivateKey)newKey).
+//        
         // remove delegation in the end
-//        delegation.destroy(delegationId, certChain);
+        delegation.destroy(delegationId, certChain);
 
     }
 
     public void testDelegationWithVoms() throws Exception {
         
-        Logger LOGGERRoot = Logger.getLogger("org");
-        Layout lay = new PatternLayout("%d{ISO8601} %-5p [%t] %l %x - %m%n");
-        Appender appender = new ConsoleAppender(lay);
-        LOGGERRoot.addAppender(appender);
-        LOGGERRoot.setLevel(Level.DEBUG);
+//        Logger LOGGERRoot = Logger.getLogger("org");
+//        Layout lay = new PatternLayout("%d{ISO8601} %-5p [%t] %l %x - %m%n");
+//        Appender appender = new ConsoleAppender(lay);
+//        LOGGERRoot.addAppender(appender);
+//        LOGGERRoot.setLevel(Level.DEBUG);
 
         String proxyfile = "src/test/certs/trusted_client.voms_proxy";
         String delegationId = "testID";
@@ -102,8 +112,6 @@ public class DelegationTest extends TestCase {
         }
         
         String req = delegation.getProxyReq(delegationId, certChain);
-        System.out.println(req);
-
         
         // client side new proxy signing
         GrDProxyDlgorOptions dopts = new GrDProxyDlgorOptions();
@@ -111,7 +119,6 @@ public class DelegationTest extends TestCase {
 
         DelegationHandler handler = new DelegationHandler(req, delegationId, dopts);
         String certString = handler.getPEMProxyCertificate();
-        System.out.println(certString);
 
         // server side new proxy storage
         delegation.putProxy(delegationId, certString, certChain);
@@ -123,11 +130,11 @@ public class DelegationTest extends TestCase {
 
     public void testDelegationWithVomsNoID() throws Exception {
         
-        Logger LOGGERRoot = Logger.getLogger("org");
-        Layout lay = new PatternLayout("%d{ISO8601} %-5p [%t] %l %x - %m%n");
-        Appender appender = new ConsoleAppender(lay);
-        LOGGERRoot.addAppender(appender);
-        LOGGERRoot.setLevel(Level.DEBUG);
+//        Logger LOGGERRoot = Logger.getLogger("org");
+//        Layout lay = new PatternLayout("%d{ISO8601} %-5p [%t] %l %x - %m%n");
+//        Appender appender = new ConsoleAppender(lay);
+//        LOGGERRoot.addAppender(appender);
+//        LOGGERRoot.setLevel(Level.DEBUG);
 
         String proxyfile = "src/test/certs/trusted_client.voms_proxy";
         String delegationId = null;
@@ -155,8 +162,6 @@ public class DelegationTest extends TestCase {
         }
         
         String req = delegation.getProxyReq(delegationId, certChain);
-        System.out.println(req);
-
         
         // client side new proxy signing
         GrDProxyDlgorOptions dopts = new GrDProxyDlgorOptions();
@@ -164,7 +169,6 @@ public class DelegationTest extends TestCase {
 
         DelegationHandler handler = new DelegationHandler(req, delegationId, dopts);
         String certString = handler.getPEMProxyCertificate();
-        System.out.println(certString);
 
         // server side new proxy storage
         delegation.putProxy(delegationId, certString, certChain);

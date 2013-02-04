@@ -73,7 +73,7 @@ import eu.emi.security.authn.x509.proxy.ProxyCSRGenerator;
 import eu.emi.security.authn.x509.proxy.ProxyCertificateOptions;
 
 /**
- * Implementation of the logic of the Glite Delegation Interface on the server side.
+ * Implementation of the server side logic of the Glite Delegation Interface.
  * 
  * @author Ricardo Rocha <Ricardo.Rocha@cern.ch>
  * @author Akos Frohner <Akos.Frohner@cern.ch>

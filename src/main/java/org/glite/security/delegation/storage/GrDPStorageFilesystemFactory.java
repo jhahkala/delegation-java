@@ -20,8 +20,7 @@ package org.glite.security.delegation.storage;
 import org.glite.security.delegation.GrDProxyDlgeeOptions;
 
 /**
- * Allows creates of new instances of the filesystem implementation of the
- * GrDPStorage interface.
+ * Allows creates of new instances of the filesystem implementation of the GrDPStorage interface.
  */
 public class GrDPStorageFilesystemFactory extends GrDPStorageFactory {
 

@@ -19,14 +19,14 @@ package org.glite.security.delegation;
 
 /**
  * Exception to be thrown if there is a problem during delegation handling.
- *
+ * 
  */
 public class DelegationException extends Exception {
     /**
      * Generated serial to be properly serializable.
      */
     private static final long serialVersionUID = -8514894331115505968L;
-    
+
     /**
      * The default constructor.
      */
@@ -36,16 +36,16 @@ public class DelegationException extends Exception {
 
     /**
      * Constructor with message.
+     * 
      * @param msg The error message.
      */
     public DelegationException(String msg) {
         super(msg);
     }
-    
-    public DelegationException(String message, Throwable t){
+
+    public DelegationException(String message, Throwable t) {
         super(message, t);
     }
-
 
     /**
      * Gets the msg value for this DelegationException.
@@ -57,7 +57,6 @@ public class DelegationException extends Exception {
         return getMessage();
     }
 
-
     /**
      * Sets the msg value for this DelegationException.
      * 
@@ -65,7 +64,8 @@ public class DelegationException extends Exception {
      * @deprecated set the message in the constructor as usual for exceptions.
      */
     public void setMsg(String msg) {
-        throw new RuntimeException("Setting exception messages is unsupported, set the message when using the constructor.");
+        throw new RuntimeException(
+                "Setting exception messages is unsupported, set the message when using the constructor.");
     }
 
 }

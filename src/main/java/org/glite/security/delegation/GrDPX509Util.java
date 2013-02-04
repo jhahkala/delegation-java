@@ -62,12 +62,11 @@ public class GrDPX509Util {
             LOGGER.fatal("Message digester implementation not found: " + e.getMessage(), e);
             throw new RuntimeException("Delegation utilities code initialization failed: " + e.getMessage(), e);
         }
-        
+
     }
 
     /**
-     * A synchronizer wrapper for the static digester, only access it through
-     * this utility method.
+     * A synchronizer wrapper for the static digester, only access it through this utility method.
      * 
      * @param input The bytes to digest.
      * @return the digested bytes.
@@ -78,18 +77,18 @@ public class GrDPX509Util {
     }
 
     /**
-     * Change the access mode of a file in the filesystem (!!! system specific
-     * !!!). I windows this method just returns with true.
+     * Change the access mode of a file in the filesystem (!!! system specific !!!). I windows this method just returns
+     * with true.
      * 
      * @param file Location of the file to be changed.
      * @param mode New mode for the file.
      * @return True if file mode has changed.
      */
     public static boolean changeFileMode(String file, int mode) {
-    	// in windows we can't change the mode, so skip
-    	if(windows){
-    		return true;
-    	}
+        // in windows we can't change the mode, so skip
+        if (windows) {
+            return true;
+        }
         Runtime runtime = Runtime.getRuntime();
         String[] cmd = new String[] { "chmod", String.valueOf(mode), file };
 
@@ -151,8 +150,8 @@ public class GrDPX509Util {
     }
 
     /**
-     * Returns SHA1 hash digest of file name based on given delegationID and DER
-     * encoded DN in form of SHA1_HASH(DelegationID)+"-"+SHA1_HASH(DN)
+     * Returns SHA1 hash digest of file name based on given delegationID and DER encoded DN in form of
+     * SHA1_HASH(DelegationID)+"-"+SHA1_HASH(DN)
      * 
      * @param delegationid_in delegationID of proxy certificate
      * @param DN_in DER encoded DN
@@ -292,11 +291,9 @@ public class GrDPX509Util {
     /**
      * Get the factory to create storage instances.
      * 
-     * @param factoryClass The full name of the class implementing the storage
-     *            factory.
+     * @param factoryClass The full name of the class implementing the storage factory.
      * @return A factory for creating storage object instances.
-     * @throws ClassNotFoundException Could not find the specified class in
-     *             classpath
+     * @throws ClassNotFoundException Could not find the specified class in classpath
      * @throws NoSuchMethodException Failed to instantiate a factory object
      * @throws InvocationTargetException Failed to instantiate a factory object
      * @throws IllegalAccessException Failed to instantiate a factory object
@@ -321,8 +318,7 @@ public class GrDPX509Util {
      * @param sigAlgName The algorithm to be used.
      * @param keyPair The keypair to include in the certificate.
      * @return A PEM encoded certificate request.
-     * @throws GeneralSecurityException Failed to generate the certificate
-     *             request.
+     * @throws GeneralSecurityException Failed to generate the certificate request.
      */
     public static String createCertificateRequest(X509Certificate subjectCert, String sigAlgName, KeyPair keyPair)
             throws GeneralSecurityException {
@@ -373,12 +369,10 @@ public class GrDPX509Util {
     }
 
     /**
-     * Generates a new delegation ID starting from the given DN and list of VOMS
-     * attributes.
+     * Generates a new delegation ID starting from the given DN and list of VOMS attributes.
      * 
      * @param dn The dn to be used in the hashing process.
-     * @param vomsAttributes The list of attributes to be used in the hashing
-     *            process.
+     * @param vomsAttributes The list of attributes to be used in the hashing process.
      * @return The generated delegation ID.
      */
     public static String genDlgID(String dn, String[] vomsAttributes) {
@@ -411,21 +405,21 @@ public class GrDPX509Util {
      * Returns the list of VOMS attributes exposed in the given SecurityContext.
      * 
      * @param sc The SecurityContext object from which to take the attributes
-     * @return A String list containing the attributes. Empty (0 element) array
-     *         if no attributes.
-     * @deprecated use the method getVomsAttributes in the GliteDelegation that does the validation properly and is configurable.
+     * @return A String list containing the attributes. Empty (0 element) array if no attributes.
+     * @deprecated use the method getVomsAttributes in the GliteDelegation that does the validation properly and is
+     *             configurable.
      */
     public static String[] getVOMSAttributes(X509Certificate certs[]) {
-        if (vomsValidator == null){
+        if (vomsValidator == null) {
             vomsValidator = VOMSValidators.newValidator();
         }
         List<VOMSAttribute> attributeCerts = vomsValidator.validate(certs);
         ArrayList<String> attributes = new ArrayList<String>();
-        
-        for(VOMSAttribute attributeCert:attributeCerts){
-            if(attributeCert != null){
+
+        for (VOMSAttribute attributeCert : attributeCerts) {
+            if (attributeCert != null) {
                 List<String> theseAttributes = attributeCert.getFQANs();
-                if(theseAttributes != null){
+                if (theseAttributes != null) {
                     attributes.addAll(theseAttributes);
                 }
             }
@@ -455,8 +449,7 @@ public class GrDPX509Util {
     /**
      * Returns the list of VOMS attributes from a single string representation.
      * 
-     * @param vomsAttributesStr A single string representation of a VOMS
-     *            attributes list.
+     * @param vomsAttributesStr A single string representation of a VOMS attributes list.
      * @return A string array containing the VOMS attributes
      */
     public static String[] fromStringVOMSAttrs(String vomsAttributesStr) {
@@ -473,6 +466,5 @@ public class GrDPX509Util {
 
         return (String[]) vomsAttributes.toArray(new String[] {});
     }
-
 
 }

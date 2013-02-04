@@ -26,13 +26,12 @@ import java.io.InputStream;
 
 import java.util.Properties;
 
-
 /**
  * Options manager for Delegator (client) side
  */
 public class GrDProxyDlgorOptions {
     static Logger logger = Logger.getLogger(GrDProxyDlgorOptions.class);
-//    private Properties props = null;
+    // private Properties props = null;
     private String issuerCertFile = null;
     private String issuerKeyFile = null;
     private String issuerPass = null;
@@ -41,36 +40,37 @@ public class GrDProxyDlgorOptions {
 
     /**
      * Constructor of class
+     * 
      * @param filename file containing delegator options
      */
     public GrDProxyDlgorOptions(String filename) throws IOException {
-    	logger.debug("Loading client options form: " + filename);
+        logger.debug("Loading client options form: " + filename);
 
-    	IOException saveException = null;
-    	
-    	InputStream st = null;
-    	try {
-    		st = new FileInputStream(filename);
-    	} catch(FileNotFoundException e) {
-    	    saveException = e;
-    	}
-    	
-    	if(st == null) {
-    		st = GrDProxyDlgorOptions.class.getClassLoader().getResourceAsStream(filename);
-    	}
-    	
-    	if(st == null){
-    	    // throw the exception from file search if it was something fishy.
-    	    if(saveException != null && !(saveException instanceof FileNotFoundException)){
-    	        throw saveException;
-    	    }
-    	    // otherwise throw generic file not found error.
-    	    throw new IOException("No file nor resource named '" + filename + "' found.");
-    	}
-    	
-    	Properties props = new Properties();
-    	props.load(st);
-    	init(props);
+        IOException saveException = null;
+
+        InputStream st = null;
+        try {
+            st = new FileInputStream(filename);
+        } catch (FileNotFoundException e) {
+            saveException = e;
+        }
+
+        if (st == null) {
+            st = GrDProxyDlgorOptions.class.getClassLoader().getResourceAsStream(filename);
+        }
+
+        if (st == null) {
+            // throw the exception from file search if it was something fishy.
+            if (saveException != null && !(saveException instanceof FileNotFoundException)) {
+                throw saveException;
+            }
+            // otherwise throw generic file not found error.
+            throw new IOException("No file nor resource named '" + filename + "' found.");
+        }
+
+        Properties props = new Properties();
+        props.load(st);
+        init(props);
     }
 
     /**
@@ -93,6 +93,7 @@ public class GrDProxyDlgorOptions {
 
     /**
      * Getting Delegator certificate file
+     * 
      * @return Certificate
      */
     public String getDlgorCertFile() {
@@ -104,6 +105,7 @@ public class GrDProxyDlgorOptions {
 
     /**
      * Getting Delegator key file
+     * 
      * @return KeyFile
      */
     public String getDlgorKeyFile() {
@@ -115,6 +117,7 @@ public class GrDProxyDlgorOptions {
 
     /**
      * Getting Delegator proxy file
+     * 
      * @return ProxyFile
      */
     public String getDlgorProxyFile() {
@@ -124,9 +127,9 @@ public class GrDProxyDlgorOptions {
         return this.issuerProxyFile;
     }
 
-    
     /**
      * Getting password of private key
+     * 
      * @return Private Key
      */
     public String getDlgorPass() {
@@ -135,6 +138,7 @@ public class GrDProxyDlgorOptions {
 
     /**
      * Getting delegation storage directory
+     * 
      * @return location of stored credentials
      */
     public String getDlgorStorage() {
@@ -146,6 +150,7 @@ public class GrDProxyDlgorOptions {
 
     /**
      * Setting Delegator certificate file
+     * 
      * @param cf Certificate File
      */
     public void setDlgorCertFile(String cf) {
@@ -154,14 +159,16 @@ public class GrDProxyDlgorOptions {
 
     /**
      * Setting Delegator key file
+     * 
      * @param kf KeyFile
      */
     public void setDlgorKeyFile(String kf) {
         this.issuerKeyFile = kf;
     }
-    
+
     /**
      * Setting Delegator proxy file
+     * 
      * @param proxy Proxy file
      */
     public void setDlgorProxyFile(String proxy) {
@@ -170,6 +177,7 @@ public class GrDProxyDlgorOptions {
 
     /**
      * Setting password of private key
+     * 
      * @param pass Private Key decryption password
      */
     public void setDlgorPass(String pass) {
@@ -178,6 +186,7 @@ public class GrDProxyDlgorOptions {
 
     /**
      * Setting delegation storage directory
+     * 
      * @param strg location of stored credentials
      */
     public void setDlgorStorage(String strg) {

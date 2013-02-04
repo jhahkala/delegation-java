@@ -102,7 +102,7 @@ public class GrDProxyDlgeeOptions {
         this.dlgeeStorageDbPool = props.getProperty("dlgeeStorageDbPool");
         this.dlgeeKeySize = Integer.parseInt(props.getProperty("dlgeeKeySize"));
         String reqString = props.getProperty("requireVomsAttributes");
-        if(reqString != null){
+        if (reqString != null) {
             requireVomsAttributes = Boolean.parseBoolean(reqString);
         }
         this.vomsDir = props.getProperty("vomsDir");
@@ -110,7 +110,7 @@ public class GrDProxyDlgeeOptions {
         this.revocationChecking = props.getProperty("revocationChecking");
         this.namespace = props.getProperty("namespace");
         this.updateInterval = props.getProperty("updateInterval");
-        
+
     }
 
     /**
@@ -255,12 +255,10 @@ public class GrDProxyDlgeeOptions {
     }
 
     /**
-     * Set whether VOMS attribute presence is required in the certificate chain
-     * that initializes the delegation process.
+     * Set whether VOMS attribute presence is required in the certificate chain that initializes the delegation process.
      * 
-     * @param required true if voms attributes are required, false if lack of
-     *            attributes is accepted as well as failure to extract the
-     *            attributes. Default is true.
+     * @param required true if voms attributes are required, false if lack of attributes is accepted as well as failure
+     *            to extract the attributes. Default is true.
      */
     public void setRequireVomsAttributes(boolean required) {
         requireVomsAttributes = required;

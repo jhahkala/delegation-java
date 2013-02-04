@@ -22,15 +22,15 @@ package org.glite.security.delegation.storage;
  */
 public class GrDPStorageException extends Exception {
 
-	/**
-     * Add serial for serialization. 
+    /**
+     * Add serial for serialization.
      */
     private static final long serialVersionUID = -1969338477706925307L;
 
     /**
-	 * Class constructor.
-	 */
-	public GrDPStorageException(String message) {
-		super(message);
-	}
+     * Class constructor.
+     */
+    public GrDPStorageException(String message) {
+        super(message);
+    }
 }

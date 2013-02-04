@@ -260,8 +260,8 @@ public class GliteDelegation {
     }
 
     /**
-     * Generates a new proxy request based on the certificates and the possibly given delegation id. Also checks if
-     * a delegation with given (or generated if not given) id for the user already exists. If a delegation with given id
+     * Generates a new proxy request based on the certificates and the possibly given delegation id. Also checks if a
+     * delegation with given (or generated if not given) id for the user already exists. If a delegation with given id
      * and user already exists, it throws a delegation exception. To renew existing delegation, use renewProxyReq.
      * 
      * @param inDelegationID The delegation id to use (generated if not present, based on dn and possible VOMS
@@ -336,8 +336,8 @@ public class GliteDelegation {
     }
 
     /**
-     * Generates a new proxy request based on the certificates and the possibly given delegation id. Also checks if
-     * a delegation with given (or generated if not given) id for the user already exists. If a delegation with given id
+     * Generates a new proxy request based on the certificates and the possibly given delegation id. Also checks if a
+     * delegation with given (or generated if not given) id for the user already exists. If a delegation with given id
      * and user already exists, it throws a delegation exception. To renew existing delegation, use renewProxyReq.
      * 
      * This method also returns the given or generated delegation ID.

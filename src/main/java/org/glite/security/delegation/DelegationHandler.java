@@ -52,7 +52,8 @@ public class DelegationHandler {
         try {
             dlgorOpt = new GrDProxyDlgorOptions(propFile);
         } catch (IOException e2) {
-            LOGGER.error("failed to read delegation options from: " + propFile + " nor from default location. Error was: " + e2.getMessage());
+            LOGGER.error("failed to read delegation options from: " + propFile
+                    + " nor from default location. Error was: " + e2.getMessage());
             return;
         }
 
@@ -79,7 +80,7 @@ public class DelegationHandler {
      * @param propFile location of properties file
      * @return Generated proxy certificate
      */
-    private void requestHandler(String certReq, String delegationID, GrDProxyDlgorOptions dlgorOpt) throws Exception{
+    private void requestHandler(String certReq, String delegationID, GrDProxyDlgorOptions dlgorOpt) throws Exception {
         try {
             LOGGER.debug("User Cert/Proxy File" + dlgorOpt.getDlgorCertFile());
             LOGGER.debug("User Key/Proxy File" + dlgorOpt.getDlgorKeyFile());
@@ -87,44 +88,45 @@ public class DelegationHandler {
             LOGGER.debug("Certificate Request" + certReq);
 
             char[] pass = null;
-            if(dlgorOpt.getDlgorPass() != null){
+            if (dlgorOpt.getDlgorPass() != null) {
                 pass = dlgorOpt.getDlgorPass().toCharArray();
             }
-            
+
             PEMCredential pemCredential = null;
             // if no keyfile given, assume it's a proxy.
-            if(dlgorOpt.getDlgorKeyFile() == null){
+            if (dlgorOpt.getDlgorKeyFile() == null) {
                 pemCredential = new PEMCredential(dlgorOpt.getDlgorCertFile(), pass);
             } else {
                 pemCredential = new PEMCredential(dlgorOpt.getDlgorCertFile(), dlgorOpt.getDlgorKeyFile(), pass);
             }
-            
+
             X509Certificate[] certs = pemCredential.getCertificateChain();
-            
-            for (int n = 0; n < certs.length; n++){
-            	LOGGER.debug("cert [" + n + "] is from " + X500NameUtils.getReadableForm(certs[n].getSubjectX500Principal()));
+
+            for (int n = 0; n < certs.length; n++) {
+                LOGGER.debug("cert [" + n + "] is from "
+                        + X500NameUtils.getReadableForm(certs[n].getSubjectX500Principal()));
             }
 
-            
             PEMReader pemReader = new PEMReader(new StringReader(certReq));
             PKCS10CertificationRequest req;
             try {
-                req = (PKCS10CertificationRequest)pemReader.readObject();
+                req = (PKCS10CertificationRequest) pemReader.readObject();
             } catch (IOException e1) {
                 LOGGER.error("Could not load the original certificate request from cache.");
-                throw new DelegationException("Could not load the original certificate request from cache: " + e1.getMessage());
+                throw new DelegationException("Could not load the original certificate request from cache: "
+                        + e1.getMessage());
             } finally {
-            	pemReader.close();
+                pemReader.close();
             }
-            
+
             ProxyRequestOptions options = new ProxyRequestOptions(certs, req);
-            
+
             X509Certificate[] proxy = ProxyGenerator.generate(options, pemCredential.getKey());
-            
+
             ByteArrayOutputStream stream = new ByteArrayOutputStream();
-            
+
             CertificateUtils.saveCertificateChain(stream, proxy, Encoding.PEM);
-            
+
             strX509CertChain = stream.toString();
         } catch (Exception e) {
             LOGGER.error("Proxy generation failed: " + e);

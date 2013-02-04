@@ -23,25 +23,23 @@ import org.glite.security.delegation.GrDProxyDlgeeOptions;
  * Allows creates of new instances of the database implementation of the GrDPStorage interface.
  */
 public class GrDPStorageDatabaseFactory extends GrDPStorageFactory {
-	
-	/**
-	 * Creates a new GrDPStorage instance and returns it to the user.
-	 *
-	 * The actual instance created is a GrDPStorageDatabase object.
-	 *
-	 * @return The storage object that interfaces the storage backend.
-	 */
-	public GrDPStorage createGrDPStorage(
-                    GrDProxyDlgeeOptions dlgeeOptions) throws GrDPStorageException {
-		// Make sure the class is loaded
-		try {
-			Class.forName(GrDPStorageDatabase.class.getName());
-		} catch(ClassNotFoundException e) {
-			throw new GrDPStorageException("Failed to find '" +
-					GrDPStorageDatabase.class.getName() + "' in classpath.");
-		}
-		// Return a new instance of the class
-		return new GrDPStorageDatabase(dlgeeOptions);
-	}
-	
+
+    /**
+     * Creates a new GrDPStorage instance and returns it to the user.
+     * 
+     * The actual instance created is a GrDPStorageDatabase object.
+     * 
+     * @return The storage object that interfaces the storage backend.
+     */
+    public GrDPStorage createGrDPStorage(GrDProxyDlgeeOptions dlgeeOptions) throws GrDPStorageException {
+        // Make sure the class is loaded
+        try {
+            Class.forName(GrDPStorageDatabase.class.getName());
+        } catch (ClassNotFoundException e) {
+            throw new GrDPStorageException("Failed to find '" + GrDPStorageDatabase.class.getName() + "' in classpath.");
+        }
+        // Return a new instance of the class
+        return new GrDPStorageDatabase(dlgeeOptions);
+    }
+
 }

@@ -23,8 +23,10 @@ import eu.emi.security.authn.x509.impl.OpensslNameUtils;
 
 /**
  * Representation of a delegated proxy entry in storage.
- *
- * <p>A delegated proxy entry in storage contains the following properties:</p>
+ * 
+ * <p>
+ * A delegated proxy entry in storage contains the following properties:
+ * </p>
  * <ul>
  * <li><i>delegationID</i>: The delegation ID assigned to the delegated proxy</li>
  * <li><i>dn</i>: The DN associated with the delegated proxy</li>
@@ -35,34 +37,34 @@ import eu.emi.security.authn.x509.impl.OpensslNameUtils;
  */
 public class GrDPStorageElement {
 
-	private String delegationID = null;
-	
-	private String DN = null;
-	
-	private String[] vomsAttributes = null;
-	
-	private String certificate = null;
-	
+    private String delegationID = null;
+
+    private String DN = null;
+
+    private String[] vomsAttributes = null;
+
+    private String certificate = null;
+
     private Date terminationTime = null;
-    
-	/**
-	 * Retrieves the delegation id of the delegated proxy.
-	 *
-	 * @return The delegation id of the delegated proxy.
-	 */
-	public String getDelegationID() {
-		return this.delegationID;
-	}
-	
-	/**
-	 * Retrieves the dn of the owner of the delegated proxy.
-	 *
-	 * @return The dn of the owner of the delegated proxy.
-	 */
-	public String getDN() {
-		return this.DN;
-	}
-    
+
+    /**
+     * Retrieves the delegation id of the delegated proxy.
+     * 
+     * @return The delegation id of the delegated proxy.
+     */
+    public String getDelegationID() {
+        return this.delegationID;
+    }
+
+    /**
+     * Retrieves the dn of the owner of the delegated proxy.
+     * 
+     * @return The dn of the owner of the delegated proxy.
+     */
+    public String getDN() {
+        return this.DN;
+    }
+
     /**
      * Retrieves the dn of the owner of the delegated proxy in X500 format.
      * 
@@ -72,73 +74,73 @@ public class GrDPStorageElement {
     public String getDNasX500() {
         return OpensslNameUtils.convertFromRfc2253(this.DN, true);
     }
-	
-	/**
-	 * Retrieves the list of voms attributes contained in the delegated proxy.
-	 *
-	 * @return The list of voms attributes in the delegated proxy.
-	 */
-	public String[] getVomsAttributes() {
-		return this.vomsAttributes;
-	}
-	
-	/**
-	 * Retrieves the delegated proxy, including its private key.
-	 *
-	 * @return The delegated proxy.
-	 */
-	public String getCertificate() {
-		return this.certificate;
-	}
-    
+
+    /**
+     * Retrieves the list of voms attributes contained in the delegated proxy.
+     * 
+     * @return The list of voms attributes in the delegated proxy.
+     */
+    public String[] getVomsAttributes() {
+        return this.vomsAttributes;
+    }
+
+    /**
+     * Retrieves the delegated proxy, including its private key.
+     * 
+     * @return The delegated proxy.
+     */
+    public String getCertificate() {
+        return this.certificate;
+    }
+
     /**
      * Retrieves the termination time of the delegated proxy.
-     *
+     * 
      * @return The termination time of the delegated proxy.
      */
     public Date getTerminationTime() {
         return this.terminationTime;
     }
-	
-	/**
-	 * Sets the delegation id of the delegated proxy.
-	 *
-	 * @param delegationID The delegation id to be assigned to the delegated proxy.
-	 */
-	public void setDelegationID(String delegationID) {
-		this.delegationID = delegationID;
-	}
-	
-	/**
-	 * Sets the dn associated with the delegated proxy.
-	 *
-	 * @param dn The dn to be associated with the delegated proxy.
-	 */
-	public void setDN(String dn) {
-		this.DN = dn;
-	}
-    
-	/**
-	 * Sets the list of voms attributes inside the delegated proxy.
-	 *
-	 * @param vomsAttributes The list of voms attributes inside the delegated proxy.
-	 */
-	public void setVomsAttributes(String[] vomsAttributes) {
-		this.vomsAttributes = vomsAttributes;
-	}
-	
-	/**
-	 * Sets the delegated proxy.
-	 *
-	 * @param certificate The delegated proxy.
-	 */
-	public void setCertificate(String certificate) {
-		this.certificate = certificate;
-	}
-	    
+
+    /**
+     * Sets the delegation id of the delegated proxy.
+     * 
+     * @param delegationID The delegation id to be assigned to the delegated proxy.
+     */
+    public void setDelegationID(String delegationID) {
+        this.delegationID = delegationID;
+    }
+
+    /**
+     * Sets the dn associated with the delegated proxy.
+     * 
+     * @param dn The dn to be associated with the delegated proxy.
+     */
+    public void setDN(String dn) {
+        this.DN = dn;
+    }
+
+    /**
+     * Sets the list of voms attributes inside the delegated proxy.
+     * 
+     * @param vomsAttributes The list of voms attributes inside the delegated proxy.
+     */
+    public void setVomsAttributes(String[] vomsAttributes) {
+        this.vomsAttributes = vomsAttributes;
+    }
+
+    /**
+     * Sets the delegated proxy.
+     * 
+     * @param certificate The delegated proxy.
+     */
+    public void setCertificate(String certificate) {
+        this.certificate = certificate;
+    }
+
     /**
      * Sets the termination time of the delegated proxy.
-     *
+     * 
      * @param terminationTime The termination time of the delegated proxy.
      */
     public void setTerminationTime(Date terminationTime) {

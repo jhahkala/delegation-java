@@ -25,8 +25,10 @@ import eu.emi.security.authn.x509.impl.X500NameUtils;
 
 /**
  * Representation of a delegation request entry in storage cache.
- *
- * <p>A delegation request entry in storage cache contains the following properties:</p>
+ * 
+ * <p>
+ * A delegation request entry in storage cache contains the following properties:
+ * </p>
  * <ul>
  * <li><i>delegationID</i>: The delegation ID assigned to the delegation request</li>
  * <li><i>dn</i>: The DN associated with the delegation request</li>
@@ -37,34 +39,34 @@ import eu.emi.security.authn.x509.impl.X500NameUtils;
  */
 public class GrDPStorageCacheElement {
 
-	private String delegationID = null;
-	
-	private String DN = null;
-	
-	private String[] vomsAttributes = null;
-	
-	private String certificateRequest = null;
-	
-	private String privateKey = null;
-	
-	/**
-	 * Retrieves the delegation id of the delegation request.
-	 *
-	 * @return The delegation id of the delegation request.
-	 */
-	public String getDelegationID() {
-		return this.delegationID;
-	}
-	
-	/**
-	 * Retrieves the dn of the owner of the delegation request.
-	 *
-	 * @return The dn of the owner of the delegation request.
-	 */
-	public String getDN() {
-		return this.DN;
-	}
- 
+    private String delegationID = null;
+
+    private String DN = null;
+
+    private String[] vomsAttributes = null;
+
+    private String certificateRequest = null;
+
+    private String privateKey = null;
+
+    /**
+     * Retrieves the delegation id of the delegation request.
+     * 
+     * @return The delegation id of the delegation request.
+     */
+    public String getDelegationID() {
+        return this.delegationID;
+    }
+
+    /**
+     * Retrieves the dn of the owner of the delegation request.
+     * 
+     * @return The dn of the owner of the delegation request.
+     */
+    public String getDN() {
+        return this.DN;
+    }
+
     /**
      * Retrieves the dn of the owner of the delegated proxy in X500 format.
      * 
@@ -74,76 +76,76 @@ public class GrDPStorageCacheElement {
     public String getDNasX500() {
         return OpensslNameUtils.convertFromRfc2253(this.DN, true);
     }
-    	
-	/**
-	 * Retrieves the list of voms attributes to be contained in the delegated proxy.
-	 *
-	 * @return The list of voms attributes to be contained in the delegated proxy.
-	 */
-	public String[] getVomsAttributes() {
-		return this.vomsAttributes;
-	}
-	
-	/**
-	 * Retrieves the delegated proxy request.
-	 *
-	 * @return The delegated proxy request.
-	 */
-	public String getCertificateRequest() {
-		return this.certificateRequest;
-	}
-	
-	/**
-	 * Retrieves the private key associated with the delegation request.
-	 *
-	 * @return The private key associated with the delegation request.
-	 */
-	public String getPrivateKey() {
-		return this.privateKey;
-	}
-	
-	/**
-	 * Sets the delegation id of the delegation request.
-	 *
-	 * @param delegationID The delegation id to be assigned to the delegation request.
-	 */
-	public void setDelegationID(String delegationID) {
-		this.delegationID = delegationID;
-	}
-	
-	/**
-	 * Sets the dn associated with the delegation request.
-	 *
-	 * @param dn The dn to be associated with the delegation request.
-	 */
-	public void setDN(String dn) {
-		this.DN = dn;
-	}
-    
-	/**
-	 * Sets the list of voms attributes to be contained inside the delegated proxy.
-	 *
-	 * @param vomsAttributes The list of voms attributes to be contained inside the delegated proxy.
-	 */
-	public void setVomsAttributes(String[] vomsAttributes) {
-		this.vomsAttributes = vomsAttributes;
-	}
-	
-	/**
-	 * Sets the delegated proxy (credential) request.
-	 *
-	 * @param certificate The delegated proxy (credential) request.
-	 */
-	public void setCertificateRequest(String certificate) {
-		this.certificateRequest = certificate;
-	}
-	
-	/**
-	 * Sets the private key associated with the delegation request.
-	 *
-	 * @param privateKey The private key associated with the delegation request.
-	 */
-	public void setPrivateKey(String privateKey) {
-		this.privateKey = privateKey;
-	}
+
+    /**
+     * Retrieves the list of voms attributes to be contained in the delegated proxy.
+     * 
+     * @return The list of voms attributes to be contained in the delegated proxy.
+     */
+    public String[] getVomsAttributes() {
+        return this.vomsAttributes;
+    }
+
+    /**
+     * Retrieves the delegated proxy request.
+     * 
+     * @return The delegated proxy request.
+     */
+    public String getCertificateRequest() {
+        return this.certificateRequest;
+    }
+
+    /**
+     * Retrieves the private key associated with the delegation request.
+     * 
+     * @return The private key associated with the delegation request.
+     */
+    public String getPrivateKey() {
+        return this.privateKey;
+    }
+
+    /**
+     * Sets the delegation id of the delegation request.
+     * 
+     * @param delegationID The delegation id to be assigned to the delegation request.
+     */
+    public void setDelegationID(String delegationID) {
+        this.delegationID = delegationID;
+    }
+
+    /**
+     * Sets the dn associated with the delegation request.
+     * 
+     * @param dn The dn to be associated with the delegation request.
+     */
+    public void setDN(String dn) {
+        this.DN = dn;
+    }
+
+    /**
+     * Sets the list of voms attributes to be contained inside the delegated proxy.
+     * 
+     * @param vomsAttributes The list of voms attributes to be contained inside the delegated proxy.
+     */
+    public void setVomsAttributes(String[] vomsAttributes) {
+        this.vomsAttributes = vomsAttributes;
+    }
+
+    /**
+     * Sets the delegated proxy (credential) request.
+     * 
+     * @param certificate The delegated proxy (credential) request.
+     */
+    public void setCertificateRequest(String certificate) {
+        this.certificateRequest = certificate;
+    }
+
+    /**
+     * Sets the private key associated with the delegation request.
+     * 
+     * @param privateKey The private key associated with the delegation request.
+     */
+    public void setPrivateKey(String privateKey) {
+        this.privateKey = privateKey;
+    }
 }

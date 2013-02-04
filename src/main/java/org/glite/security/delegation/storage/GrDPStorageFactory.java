@@ -23,14 +23,15 @@ import org.glite.security.delegation.GrDProxyDlgeeOptions;
  * Factory interface to get GrDPStorage instances.
  */
 public abstract class GrDPStorageFactory {
-	
-	/**
-	 * Creates a new GrDPStorage instance and returns it to the user.
-	 *
-	 * @return The storage object that interfaces the storage backend.
-	 */
-    public GrDPStorage createGrDPStorage(@SuppressWarnings("unused") GrDProxyDlgeeOptions dlgeeOptions) throws GrDPStorageException {
+
+    /**
+     * Creates a new GrDPStorage instance and returns it to the user.
+     * 
+     * @return The storage object that interfaces the storage backend.
+     */
+    public GrDPStorage createGrDPStorage(@SuppressWarnings("unused") GrDProxyDlgeeOptions dlgeeOptions)
+            throws GrDPStorageException {
         throw new GrDPStorageException("No implementation for '" + GrDPStorage.class.getName() + "' was found.");
     }
-	
+
 }

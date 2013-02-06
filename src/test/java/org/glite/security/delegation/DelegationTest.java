@@ -5,6 +5,7 @@ import java.math.BigInteger;
 import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAKey;
 import java.security.interfaces.RSAPrivateCrtKey;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 
@@ -13,12 +14,72 @@ import org.glite.security.delegation.storage.GrDPStorage;
 import org.glite.security.delegation.storage.GrDPStorageElement;
 import org.glite.security.delegation.storage.GrDPStorageFactory;
 
+import eu.emi.security.authn.x509.CrlCheckingMode;
+import eu.emi.security.authn.x509.NamespaceCheckingMode;
+import eu.emi.security.authn.x509.OCSPParametes;
+import eu.emi.security.authn.x509.ProxySupport;
+import eu.emi.security.authn.x509.RevocationParameters;
+import eu.emi.security.authn.x509.RevocationParameters.RevocationCheckingOrder;
+import eu.emi.security.authn.x509.StoreUpdateListener;
+import eu.emi.security.authn.x509.ValidationError;
+import eu.emi.security.authn.x509.ValidationErrorListener;
+import eu.emi.security.authn.x509.ValidationResult;
 import eu.emi.security.authn.x509.X509Credential;
+import eu.emi.security.authn.x509.impl.OpensslCertChainValidator;
 import eu.emi.security.authn.x509.impl.PEMCredential;
+import eu.emi.security.authn.x509.impl.ValidatorParams;
 
 import junit.framework.TestCase;
 
 public class DelegationTest extends TestCase {
+
+    public OpensslCertChainValidator getValidator() {
+        StoreUpdateListener listener = new StoreUpdateListener() {
+            public void loadingNotification(String location, String type, Severity level, Exception cause) {
+                if (level != Severity.NOTIFICATION) {
+                    System.out.println("Error when creating or using SSL socket. Type " + type + " level: " + level
+                            + ((cause == null) ? "" : (" cause: " + cause.getClass() + ":" + cause.getMessage())));
+                } else {
+                    // log successful (re)loading
+                }
+            }
+        };
+
+        ArrayList<StoreUpdateListener> listenerList = new ArrayList<StoreUpdateListener>();
+        listenerList.add(listener);
+
+        RevocationParameters revParam = new RevocationParameters(CrlCheckingMode.REQUIRE, new OCSPParametes(), false,
+                RevocationCheckingOrder.CRL_OCSP);
+
+        ValidatorParams validatorParams = new ValidatorParams(revParam, ProxySupport.ALLOW, listenerList);
+
+        String trustStoreLocation = "src/test/grid-security/certificates";
+
+        NamespaceCheckingMode namespaceMode = NamespaceCheckingMode.EUGRIDPMA_AND_GLOBUS;
+
+        long intervalMS = 3600000; // update every hour
+
+        OpensslCertChainValidator validator = new OpensslCertChainValidator(trustStoreLocation, namespaceMode,
+                intervalMS, validatorParams);
+
+        ValidationErrorListener validationListener = new ValidationErrorListener() {
+            @Override
+            public boolean onValidationError(ValidationError error) {
+                System.out.println("Error when validating incoming certificate: " + error.getMessage() + " position: "
+                        + error.getPosition() + " " + error.getParameters());
+                X509Certificate chain[] = error.getChain();
+                for (X509Certificate cert : chain) {
+                    System.out.println(cert.toString());
+                }
+                return false;
+            }
+
+        };
+
+        validator.addValidationListener(validationListener);
+        return validator;
+
+    }
 
     public void testDelegationWithoutVoms() throws Exception {
 
@@ -80,9 +141,13 @@ public class DelegationTest extends TestCase {
         BigInteger privModulus = newKey.getModulus();
         assertEquals("Private key and public key of delegated credentials don't match.", pubModulus, privModulus);
 
+        OpensslCertChainValidator validator = getValidator();
+        ValidationResult result = validator.validate(newCredential.getCertificateChain());
+        assertTrue(result.isValid());
+        
         // check getting the expiration time
         Calendar expTime = delegation.getTerminationTime(delegationId, certChain);
-//        System.out.println("Original delegation exp time" + expTime.getTime().getTime());
+        // System.out.println("Original delegation exp time" + expTime.getTime().getTime());
         Calendar compareDate = new GregorianCalendar();
         compareDate.add(Calendar.HOUR, 12);
         assertTrue("Delegated credential expires too late", expTime.before(compareDate));
@@ -98,10 +163,10 @@ public class DelegationTest extends TestCase {
         // server side new proxy storage
         delegation.putProxy(delegationId, renewCertString, certChain);
         expTime = delegation.getTerminationTime(delegationId, certChain);
-//        System.out.println("Renewed delegation exp time" + expTime.getTime().getTime());
+        // System.out.println("Renewed delegation exp time" + expTime.getTime().getTime());
         compareDate.add(Calendar.SECOND, 3);
-//        System.out.println(compareDate.getTime().getTime());
-//        System.out.println("comparison returns: " + expTime.compareTo(compareDate));
+        // System.out.println(compareDate.getTime().getTime());
+        // System.out.println("comparison returns: " + expTime.compareTo(compareDate));
         assertTrue("Delegated credential expires too early, renewal failed", expTime.after(compareDate));
 
         // verify the cache is empty and putting the delegation in again fails
@@ -185,7 +250,7 @@ public class DelegationTest extends TestCase {
 
         // check getting the expiration time
         Calendar expTime = delegation.getTerminationTime(delegationId, certChain);
-//        System.out.println("Original delegation exp time" + expTime.getTime().getTime());
+        // System.out.println("Original delegation exp time" + expTime.getTime().getTime());
         Calendar compareDate = new GregorianCalendar();
         compareDate.add(Calendar.HOUR, 12);
         assertTrue("Delegated credential expires too late", expTime.before(compareDate));
@@ -201,10 +266,10 @@ public class DelegationTest extends TestCase {
         // server side new proxy storage
         delegation.putProxy(delegationId, renewCertString, certChain);
         expTime = delegation.getTerminationTime(delegationId, certChain);
-//        System.out.println("Renewed delegation exp time" + expTime.getTime().getTime());
+        // System.out.println("Renewed delegation exp time" + expTime.getTime().getTime());
         compareDate.add(Calendar.SECOND, 3);
-//        System.out.println(compareDate.getTime().getTime());
-//        System.out.println("comparison returns: " + expTime.compareTo(compareDate));
+        // System.out.println(compareDate.getTime().getTime());
+        // System.out.println("comparison returns: " + expTime.compareTo(compareDate));
         assertTrue("Delegated credential expires too early, renewal failed", expTime.after(compareDate));
 
         // verify the cache is empty and putting the delegation in again fails
@@ -289,7 +354,7 @@ public class DelegationTest extends TestCase {
 
         // check getting the expiration time
         Calendar expTime = delegation.getTerminationTime(delegationId, certChain);
-//        System.out.println("Original delegation exp time" + expTime.getTime().getTime());
+        // System.out.println("Original delegation exp time" + expTime.getTime().getTime());
         Calendar compareDate = new GregorianCalendar();
         compareDate.add(Calendar.HOUR, 12);
         assertTrue("Delegated credential expires too late", expTime.before(compareDate));
@@ -305,10 +370,10 @@ public class DelegationTest extends TestCase {
         // server side new proxy storage
         delegation.putProxy(delegationId, renewCertString, certChain);
         expTime = delegation.getTerminationTime(delegationId, certChain);
-//        System.out.println("Renewed delegation exp time" + expTime.getTime().getTime());
+        // System.out.println("Renewed delegation exp time" + expTime.getTime().getTime());
         compareDate.add(Calendar.SECOND, 3);
-//        System.out.println(compareDate.getTime().getTime());
-//        System.out.println("comparison returns: " + expTime.compareTo(compareDate));
+        // System.out.println(compareDate.getTime().getTime());
+        // System.out.println("comparison returns: " + expTime.compareTo(compareDate));
         assertTrue("Delegated credential expires too early, renewal failed", expTime.after(compareDate));
 
         // verify the cache is empty and putting the delegation in again fails
@@ -329,7 +394,7 @@ public class DelegationTest extends TestCase {
         assertNull("Finding deleted proxy form storage didn't fail like it should", element);
 
     }
-    
+
     public void testDelegationWithVoms() throws Exception {
 
         // Logger LOGGERRoot = Logger.getLogger("org");
@@ -394,7 +459,7 @@ public class DelegationTest extends TestCase {
 
         // check getting the expiration time
         Calendar expTime = delegation.getTerminationTime(delegationId, certChain);
-//        System.out.println("Original delegation exp time" + expTime.getTime().getTime());
+        // System.out.println("Original delegation exp time" + expTime.getTime().getTime());
         Calendar compareDate = new GregorianCalendar();
         compareDate.add(Calendar.HOUR, 12);
         assertTrue("Delegated credential expires too late", expTime.before(compareDate));
@@ -410,10 +475,10 @@ public class DelegationTest extends TestCase {
         // server side new proxy storage
         delegation.putProxy(delegationId, renewCertString, certChain);
         expTime = delegation.getTerminationTime(delegationId, certChain);
-//        System.out.println("Renewed delegation exp time" + expTime.getTime().getTime());
+        // System.out.println("Renewed delegation exp time" + expTime.getTime().getTime());
         compareDate.add(Calendar.SECOND, 3);
-//        System.out.println(compareDate.getTime().getTime());
-//        System.out.println("comparison returns: " + expTime.compareTo(compareDate));
+        // System.out.println(compareDate.getTime().getTime());
+        // System.out.println("comparison returns: " + expTime.compareTo(compareDate));
         assertTrue("Delegated credential expires too early, renewal failed", expTime.after(compareDate));
 
         // verify the cache is empty and putting the delegation in again fails
@@ -425,7 +490,7 @@ public class DelegationTest extends TestCase {
         }
         assertTrue("Putting already handled proxy didn't fail like it should", exception);
 
-         // remove delegation in the end
+        // remove delegation in the end
         delegation.destroy(delegationId, certChain);
 
         // verify the delegation is gone
@@ -483,7 +548,7 @@ public class DelegationTest extends TestCase {
         GrDPStorageFactory stgFactory = GrDPX509Util.getGrDPStorageFactory(opts.getDlgeeStorageFactory());
         GrDPStorage storage = stgFactory.createGrDPStorage(opts);
         CertInfoTriple info = new CertInfoTriple(certChain, null, false);
-        String tempDelId = GrDPX509Util.genDlgID(info.dn, new String[]{"/utoVO", "/utoVO/testgr"});
+        String tempDelId = GrDPX509Util.genDlgID(info.dn, new String[] { "/utoVO", "/utoVO/testgr" });
 
         GrDPStorageElement element = storage.findGrDPStorageElement(tempDelId, info.dn);
 
@@ -499,7 +564,7 @@ public class DelegationTest extends TestCase {
 
         // check getting the expiration time
         Calendar expTime = delegation.getTerminationTime(delegationId, certChain);
-//        System.out.println("Original delegation exp time" + expTime.getTime().getTime());
+        // System.out.println("Original delegation exp time" + expTime.getTime().getTime());
         Calendar compareDate = new GregorianCalendar();
         compareDate.add(Calendar.HOUR, 12);
         assertTrue("Delegated credential expires too late", expTime.before(compareDate));
@@ -515,10 +580,10 @@ public class DelegationTest extends TestCase {
         // server side new proxy storage
         delegation.putProxy(delegationId, renewCertString, certChain);
         expTime = delegation.getTerminationTime(delegationId, certChain);
-//        System.out.println("Renewed delegation exp time" + expTime.getTime().getTime());
+        // System.out.println("Renewed delegation exp time" + expTime.getTime().getTime());
         compareDate.add(Calendar.SECOND, 3);
-//        System.out.println(compareDate.getTime().getTime());
-//        System.out.println("comparison returns: " + expTime.compareTo(compareDate));
+        // System.out.println(compareDate.getTime().getTime());
+        // System.out.println("comparison returns: " + expTime.compareTo(compareDate));
         assertTrue("Delegated credential expires too early, renewal failed", expTime.after(compareDate));
 
         // verify the cache is empty and putting the delegation in again fails
@@ -530,7 +595,7 @@ public class DelegationTest extends TestCase {
         }
         assertTrue("Putting already handled proxy didn't fail like it should", exception);
 
-         // remove delegation in the end
+        // remove delegation in the end
         delegation.destroy(delegationId, certChain);
 
         // verify the delegation is gone

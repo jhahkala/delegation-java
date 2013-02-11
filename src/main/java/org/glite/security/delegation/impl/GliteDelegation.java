@@ -71,6 +71,8 @@ import eu.emi.security.authn.x509.impl.X500NameUtils;
 import eu.emi.security.authn.x509.proxy.ProxyCSR;
 import eu.emi.security.authn.x509.proxy.ProxyCSRGenerator;
 import eu.emi.security.authn.x509.proxy.ProxyCertificateOptions;
+import eu.emi.security.authn.x509.proxy.ProxyChainInfo;
+import eu.emi.security.authn.x509.proxy.ProxyType;
 
 /**
  * Implementation of the server side logic of the Glite Delegation Interface.
@@ -811,8 +813,12 @@ public class GliteDelegation {
         try {
             ProxyCertificateOptions options = new ProxyCertificateOptions(certs);
             options.setPublicKey(keyPair.getPublic());
+            ProxyChainInfo info = new ProxyChainInfo(certs);
+            ProxyType type = info.getProxyType().toProxyType();
+            options.setType(type);
             ProxyCSR proxyCsr = ProxyCSRGenerator.generate(options, keyPair.getPrivate());
             PKCS10CertificationRequest req = proxyCsr.getCSR();
+//            System.out.println(req.getCertificationRequestInfo().getSubject());
             StringWriter stringWriter = new StringWriter();
             PEMWriter pemWriter = new PEMWriter(stringWriter);
             try {

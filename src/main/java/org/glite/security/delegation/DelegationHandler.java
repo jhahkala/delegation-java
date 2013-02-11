@@ -29,6 +29,7 @@ import eu.emi.security.authn.x509.impl.CertificateUtils;
 import eu.emi.security.authn.x509.impl.CertificateUtils.Encoding;
 import eu.emi.security.authn.x509.impl.PEMCredential;
 import eu.emi.security.authn.x509.impl.X500NameUtils;
+import eu.emi.security.authn.x509.proxy.ProxyCSRInfo;
 import eu.emi.security.authn.x509.proxy.ProxyGenerator;
 import eu.emi.security.authn.x509.proxy.ProxyRequestOptions;
 
@@ -120,7 +121,11 @@ public class DelegationHandler {
             }
 
             ProxyRequestOptions options = new ProxyRequestOptions(certs, req);
-
+            
+            ProxyCSRInfo reqInfo = new ProxyCSRInfo(req);
+            
+            options.setType(reqInfo.getProxyType());
+            
             X509Certificate[] proxy = ProxyGenerator.generate(options, pemCredential.getKey());
 
             ByteArrayOutputStream stream = new ByteArrayOutputStream();

@@ -314,7 +314,7 @@ public class GrDPX509Util {
     /**
      * Create a new certificate request.
      * 
-     * @param subjectDN The dn to include in the certificate request.
+     * @param subjectCert The certificate to use as the basis for proxy certificate request generation.
      * @param sigAlgName The algorithm to be used.
      * @param keyPair The keypair to include in the certificate.
      * @return A PEM encoded certificate request.
@@ -363,7 +363,7 @@ public class GrDPX509Util {
      * @param pk public key of a certificate (request)
      * @return The generated session ID
      */
-    public static String generateSessionID(PublicKey pk) throws java.security.NoSuchAlgorithmException {
+    public static String generateSessionID(PublicKey pk) {
         return new String(Hex.encode(getMostSignificant(digest(pk.getEncoded()), 20)));
 
     }
@@ -404,7 +404,7 @@ public class GrDPX509Util {
     /**
      * Returns the list of VOMS attributes exposed in the given SecurityContext.
      * 
-     * @param sc The SecurityContext object from which to take the attributes
+     * @param certs certificate chain to get the voms attributes from.
      * @return A String list containing the attributes. Empty (0 element) array if no attributes.
      * @deprecated use the method getVomsAttributes in the GliteDelegation that does the validation properly and is
      *             configurable.
@@ -464,7 +464,7 @@ public class GrDPX509Util {
             vomsAttributes.add(st.nextToken());
         }
 
-        return (String[]) vomsAttributes.toArray(new String[] {});
+        return vomsAttributes.toArray(new String[] {});
     }
 
 }

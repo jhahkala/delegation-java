@@ -539,12 +539,9 @@ public class GliteDelegation {
 
         logger.debug("Client DN: " + info.dn);
 
-        // Get a delegation ID for the given proxy (or take the specified one if
-        // given)
-        // TODO: Should the dlg id here be generated from the client or the
-        // proxy info?
-        // Also, should the client and proxy VOMS attributes be checked for a
-        // match?
+        // Get a delegation ID for the given proxy (or take the specified one ifgiven)
+        // TODO: Should the dlg id here be generated from the client or theproxy info?
+        // Also, should the client and proxy VOMS attributes be checked for amatch?
         if (delegationID == null || delegationID.length() == 0) {
             delegationID = GrDPX509Util.genDlgID(info.dn, info.vomsAttributes);
         }
@@ -559,13 +556,8 @@ public class GliteDelegation {
         }
 
         String cacheID = delegationID;
-        try {
-            cacheID = delegationID + '+' + GrDPX509Util.generateSessionID(proxyCertChain[0].getPublicKey());
-            logger.debug("public key is: " + proxyCertChain[0].getPublicKey());
-        } catch (GeneralSecurityException e) {
-            logger.error("Error while generating the session ID." + e);
-            throw new DelegationException("Failed to generate the session ID.");
-        }
+        cacheID = delegationID + '+' + GrDPX509Util.generateSessionID(proxyCertChain[0].getPublicKey());
+        logger.debug("public key is: " + proxyCertChain[0].getPublicKey());
         logger.debug("Cache ID (delegation ID + session ID): " + cacheID);
 
         // Get the cache entry for this delegation ID
@@ -613,8 +605,7 @@ public class GliteDelegation {
             throw new DelegationException("Error while decoding the certificate request.");
         }
 
-        // Add the private key to the proxy certificate chain and check it was
-        // ok
+        // Add the private key to the proxy certificate chain and check it was ok
         ByteArrayInputStream keyStream = new ByteArrayInputStream(cacheElem.getPrivateKey().getBytes());
         PrivateKey privateKey;
         try {
@@ -650,8 +641,7 @@ public class GliteDelegation {
             throw new DelegationException("Could not properly process given proxy.");
         }
 
-        // Save the proxy in proxy storage (copying the rest from the info taken
-        // from the cache)
+        // Save the proxy in proxy storage (copying the rest from the info taken from the cache)
         try {
             GrDPStorageElement elem = m_storage.findGrDPStorageElement(delegationID, info.dn);
             if (elem != null) {
@@ -756,8 +746,7 @@ public class GliteDelegation {
         logger.debug("Got getTerminationTime request for delegation id '" + delegationID + "' from client '" + info.dn
                 + "'");
 
-        // Search for an existing entry in storage for this delegation ID (null
-        // if non existing)
+        // Search for an existing entry in storage for this delegation ID (null if non existing)
         try {
             elem = m_storage.findGrDPStorageElement(delegationID, info.dn);
         } catch (GrDPStorageException e) {
@@ -818,7 +807,7 @@ public class GliteDelegation {
             options.setType(type);
             ProxyCSR proxyCsr = ProxyCSRGenerator.generate(options, keyPair.getPrivate());
             PKCS10CertificationRequest req = proxyCsr.getCSR();
-//            System.out.println(req.getCertificationRequestInfo().getSubject());
+            // System.out.println(req.getCertificationRequestInfo().getSubject());
             StringWriter stringWriter = new StringWriter();
             PEMWriter pemWriter = new PEMWriter(stringWriter);
             try {
@@ -837,20 +826,13 @@ public class GliteDelegation {
         logger.debug("Certificate request generation was successfull.");
 
         String cacheID = null;
-        try {
-            cacheID = dlgID + '+' + GrDPX509Util.generateSessionID(keyPair.getPublic());
-            logger.debug("public key is: " + keyPair.getPublic());
-        } catch (GeneralSecurityException e) {
-            logger.error("Error while generating the session ID." + e);
-            throw new DelegationException("Failed to generate the session ID.");
-        }
+        cacheID = dlgID + '+' + GrDPX509Util.generateSessionID(keyPair.getPublic());
+        logger.debug("public key is: " + keyPair.getPublic());
         logger.debug("Cache ID (delegation ID + session ID): " + cacheID);
 
         try {
-            // TODO: remove search from cache, as the public key is used as
-            // random ID, each transaction is individual
-            // and search always fails, no update of request is possible and
-            // would give rise to race conditions.
+            // TODO: remove search from cache, as the public key is used as random ID, each transaction is individual
+            // and search always fails, no update of request is possible and would give rise to race conditions.
 
             // Store the certificate request in cache
             GrDPStorageCacheElement cacheElem = m_storage.findGrDPStorageCacheElement(cacheID, clientDN);

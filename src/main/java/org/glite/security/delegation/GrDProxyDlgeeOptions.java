@@ -285,7 +285,7 @@ public class GrDProxyDlgeeOptions {
     /**
      * Gets the directory where the CA files for checking the voms AC are loaded from.
      * 
-     * @return the vomsTrustStore
+     * @return the voms CA directory.
      */
     public String getVomsCAs() {
         return vomsCAs;
@@ -294,7 +294,7 @@ public class GrDProxyDlgeeOptions {
     /**
      * Sets the directory where the CA files for checking the voms AC are loaded from.
      * 
-     * @param vomsTrustStore the vomsTrustStore to set
+     * @param vomsCAs the CA directory to set for voms certificate validation.
      */
     public void setVomsCAs(String vomsCAs) {
         this.vomsCAs = vomsCAs;

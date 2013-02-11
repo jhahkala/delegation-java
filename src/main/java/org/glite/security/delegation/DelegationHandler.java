@@ -64,9 +64,9 @@ public class DelegationHandler {
     /**
      * Class constructor
      * 
-     * @param certReq Service certificate request
-     * @param delegationID Delegation identifier
-     * @param propFile location of properties file
+     * @param certReq Service certificate request.
+     * @param delegationID Delegation identifier.
+     * @param opts the delegation options, given as a GrDProxyDlgorOptions class.
      */
     public DelegationHandler(String certReq, String delegationID, GrDProxyDlgorOptions opts) throws Exception {
         requestHandler(certReq, delegationID, opts);

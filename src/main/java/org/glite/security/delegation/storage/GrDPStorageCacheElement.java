@@ -17,11 +17,7 @@
 
 package org.glite.security.delegation.storage;
 
-import javax.security.auth.x500.X500Principal;
-
-import eu.emi.security.authn.x509.helpers.CertificateHelpers;
 import eu.emi.security.authn.x509.impl.OpensslNameUtils;
-import eu.emi.security.authn.x509.impl.X500NameUtils;
 
 /**
  * Representation of a delegation request entry in storage cache.

@@ -24,7 +24,6 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.security.GeneralSecurityException;
-import java.security.KeyPair;
 import java.security.KeyStoreException;
 import java.security.PrivateKey;
 import java.security.cert.CertificateExpiredException;
@@ -780,34 +779,34 @@ public class GliteDelegation {
     private String createAndStoreCertificateRequest(X509Certificate certs[], String dlgID, String clientDN,
             String[] vomsAttributes) throws DelegationException {
 
-        // Get a random KeyPair
-        KeyPair keyPair = GrDPX509Util.getKeyPair(m_keySize);
-
-        ByteArrayOutputStream stream = new ByteArrayOutputStream();
-        try {
-            CertificateUtils.savePrivateKey(stream, keyPair.getPrivate(), Encoding.PEM, null, null);
-        } catch (IllegalArgumentException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-
-        String privateKey = stream.toString();
-        logger.debug("KeyPair generation was successfull.");
-        logger.debug("Public key is: " + keyPair.getPublic());
-
         // Generate the certificate request
         String certRequest = null;
+        PrivateKey privKey = null;
+        ProxyCSR proxyCsr = null;
+        String privateKeyString = null;
         try {
             ProxyCertificateOptions options = new ProxyCertificateOptions(certs);
-            options.setPublicKey(keyPair.getPublic());
+            // options..setPublicKey(keyPair.getPublic());
             ProxyChainInfo info = new ProxyChainInfo(certs);
             ProxyType type = info.getProxyType().toProxyType();
             options.setType(type);
-            ProxyCSR proxyCsr = ProxyCSRGenerator.generate(options, keyPair.getPrivate());
+            options.setKeyLength(m_keySize);
+            proxyCsr = ProxyCSRGenerator.generate(options);
             PKCS10CertificationRequest req = proxyCsr.getCSR();
+            privKey = proxyCsr.getPrivateKey();
             // System.out.println(req.getCertificationRequestInfo().getSubject());
+            ByteArrayOutputStream stream = new ByteArrayOutputStream();
+            try {
+                CertificateUtils.savePrivateKey(stream, privKey, Encoding.PEM, null, null);
+            } catch (IllegalArgumentException e) {
+                logger.error("Failed to generate certificate request.", e);
+                throw new DelegationException("Internal failure, failed to generate certificate request.", e);
+            } catch (IOException e) {
+                logger.error("Failed to generate certificate request.", e);
+                throw new DelegationException("Internal failure, failed to generate certificate request.", e);
+            }
+            privateKeyString = stream.toString();
+
             StringWriter stringWriter = new StringWriter();
             PEMWriter pemWriter = new PEMWriter(stringWriter);
             try {
@@ -815,7 +814,8 @@ public class GliteDelegation {
                 pemWriter.flush();
                 pemWriter.close();
             } catch (IOException e) {
-                throw new GeneralSecurityException("Certificate output as string failed: " + e.getMessage());
+                logger.error("Failed to put certificate request in storage.", e);
+                throw new DelegationException("Internal failure.", e);
             }
 
             certRequest = stringWriter.toString();
@@ -826,33 +826,26 @@ public class GliteDelegation {
         logger.debug("Certificate request generation was successfull.");
 
         String cacheID = null;
-        cacheID = dlgID + '+' + GrDPX509Util.generateSessionID(keyPair.getPublic());
-        logger.debug("public key is: " + keyPair.getPublic());
-        logger.debug("Cache ID (delegation ID + session ID): " + cacheID);
+        try {
+            cacheID = dlgID + '+' + GrDPX509Util.generateSessionID(proxyCsr.getCSR().getPublicKey());
+            logger.debug("public key is: " + proxyCsr.getCSR().getPublicKey());
+            logger.debug("Cache ID (delegation ID + session ID): " + cacheID);
+        } catch (Exception e) {
+            logger.error("Failed to generate certificate request.", e);
+            throw new DelegationException("Internal failure, failed to generate certificate request.", e);
+        }
 
         try {
-            // TODO: remove search from cache, as the public key is used as random ID, each transaction is individual
-            // and search always fails, no update of request is possible and would give rise to race conditions.
-
-            // Store the certificate request in cache
-            GrDPStorageCacheElement cacheElem = m_storage.findGrDPStorageCacheElement(cacheID, clientDN);
-            if (cacheElem != null) {
-                cacheElem.setCertificateRequest(certRequest);
-                cacheElem.setPrivateKey(privateKey);
-                cacheElem.setVomsAttributes(vomsAttributes);
-                m_storage.updateGrDPStorageCacheElement(cacheElem);
-            } else {
-                cacheElem = new GrDPStorageCacheElement();
-                cacheElem.setDelegationID(cacheID);
-                cacheElem.setDN(clientDN);
-                cacheElem.setVomsAttributes(vomsAttributes);
-                cacheElem.setCertificateRequest(certRequest);
-                cacheElem.setPrivateKey(privateKey);
-                m_storage.insertGrDPStorageCacheElement(cacheElem);
-            }
+            GrDPStorageCacheElement cacheElem = new GrDPStorageCacheElement();
+            cacheElem.setDelegationID(cacheID);
+            cacheElem.setDN(clientDN);
+            cacheElem.setVomsAttributes(vomsAttributes);
+            cacheElem.setCertificateRequest(certRequest);
+            cacheElem.setPrivateKey(privateKeyString);
+            m_storage.insertGrDPStorageCacheElement(cacheElem);
         } catch (GrDPStorageException e) {
             logger.error("Failed to put certificate request in storage.", e);
-            throw new DelegationException("Internal failure.");
+            throw new DelegationException("Internal failure.", e);
         }
         logger.debug("New certificate request successfully stored in cache.");
 

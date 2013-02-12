@@ -348,6 +348,7 @@ public class GrDPX509Util {
      * Generate a new key pair.
      * 
      * @return The generated KeyPair object.
+     * @deprecated let canl handle the keys and decide the algorithms etc.
      */
     public static KeyPair getKeyPair(int size) {
 

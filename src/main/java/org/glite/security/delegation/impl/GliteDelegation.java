@@ -71,6 +71,7 @@ import eu.emi.security.authn.x509.proxy.ProxyCSR;
 import eu.emi.security.authn.x509.proxy.ProxyCSRGenerator;
 import eu.emi.security.authn.x509.proxy.ProxyCertificateOptions;
 import eu.emi.security.authn.x509.proxy.ProxyChainInfo;
+import eu.emi.security.authn.x509.proxy.ProxyPolicy;
 import eu.emi.security.authn.x509.proxy.ProxyType;
 
 /**
@@ -794,6 +795,9 @@ public class GliteDelegation {
             options.setType(type);
             options.setKeyLength(m_keySize);
             if(limited || info.isLimited()){
+//                if(type != ProxyType.LEGACY){
+//                    options.setPolicy(new ProxyPolicy(ProxyPolicy.LIMITED_PROXY_OID));
+//                }
                 options.setLimited(limited);
             }
             proxyCsr = ProxyCSRGenerator.generate(options);

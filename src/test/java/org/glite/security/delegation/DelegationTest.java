@@ -570,8 +570,8 @@ public class DelegationTest extends TestCase {
         DelegationHandler handler = new DelegationHandler(req, delegationId, dopts);
         String certString = handler.getPEMProxyCertificate();
 
-//        ProxyChainInfo generatedProxyInfo = new ProxyChainInfo(handler.getProxyCertificate());
-//        assertTrue("Generated proxy is not limited even though it should be.", generatedProxyInfo.isLimited());
+        ProxyChainInfo generatedProxyInfo = new ProxyChainInfo(handler.getProxyCertificate());
+        assertTrue("Generated proxy is not limited even though it should be.", generatedProxyInfo.isLimited());
 
         // server side new proxy storage
         delegation.putProxy(delegationId, certString, certChain);

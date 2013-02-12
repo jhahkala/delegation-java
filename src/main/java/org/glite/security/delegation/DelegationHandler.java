@@ -32,7 +32,9 @@ import eu.emi.security.authn.x509.impl.X500NameUtils;
 import eu.emi.security.authn.x509.proxy.ProxyCSRInfo;
 import eu.emi.security.authn.x509.proxy.ProxyChainInfo;
 import eu.emi.security.authn.x509.proxy.ProxyGenerator;
+import eu.emi.security.authn.x509.proxy.ProxyPolicy;
 import eu.emi.security.authn.x509.proxy.ProxyRequestOptions;
+import eu.emi.security.authn.x509.proxy.ProxyType;
 
 /**
  * The delegation handler class for the client side
@@ -135,6 +137,9 @@ public class DelegationHandler {
             }
 
             if(dlgorOpt.isLimited() || reqLimited || info.isLimited()){
+                if(reqInfo.getProxyType() != ProxyType.LEGACY){
+                    options.setPolicy(new ProxyPolicy(ProxyPolicy.LIMITED_PROXY_OID));
+                }
                 options.setLimited(true);
             }
             

@@ -48,6 +48,24 @@ public class GrDProxyDlgeeOptions {
     private String revocationChecking = null;
     private String namespace = null;
     private String updateInterval = null;
+    private boolean limited = false;
+
+    /**
+     * Returns whether the new proxy should be limited or not.
+     * @return the limited
+     */
+    public boolean isLimited() {
+        return limited;
+    }
+
+    /**
+     * Sets whether the new proxy should be limited or not.
+     * 
+     * @param limited the limited to set
+     */
+    public void setLimited(boolean limited) {
+        this.limited = limited;
+    }
 
     /**
      * Constructor of class
@@ -110,6 +128,10 @@ public class GrDProxyDlgeeOptions {
         this.revocationChecking = props.getProperty("revocationChecking");
         this.namespace = props.getProperty("namespace");
         this.updateInterval = props.getProperty("updateInterval");
+        String limitedString = props.getProperty("limitedProxy");
+        if(limitedString != null){
+            this.limited = Boolean.parseBoolean(limitedString);
+        }
 
     }
 

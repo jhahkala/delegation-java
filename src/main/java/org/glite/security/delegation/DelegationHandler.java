@@ -30,6 +30,7 @@ import eu.emi.security.authn.x509.impl.CertificateUtils.Encoding;
 import eu.emi.security.authn.x509.impl.PEMCredential;
 import eu.emi.security.authn.x509.impl.X500NameUtils;
 import eu.emi.security.authn.x509.proxy.ProxyCSRInfo;
+import eu.emi.security.authn.x509.proxy.ProxyChainInfo;
 import eu.emi.security.authn.x509.proxy.ProxyGenerator;
 import eu.emi.security.authn.x509.proxy.ProxyRequestOptions;
 
@@ -125,6 +126,25 @@ public class DelegationHandler {
             ProxyCSRInfo reqInfo = new ProxyCSRInfo(req);
             
             options.setType(reqInfo.getProxyType());
+            
+            ProxyChainInfo info = new ProxyChainInfo(certs);
+            
+            boolean reqLimited = false;
+            if(reqInfo.isLimited() != null){
+                reqLimited = reqInfo.isLimited().booleanValue();
+            }
+
+            if(dlgorOpt.isLimited() || reqLimited || info.isLimited()){
+                options.setLimited(true);
+            }
+            
+            if(dlgorOpt.getTracingFrom() != null){
+                options.setProxyTracingIssuer(dlgorOpt.getTracingFrom());
+            }
+            
+            if(dlgorOpt.getTracingTo() != null){
+                options.setProxyTracingSubject(dlgorOpt.getTracingTo());
+            }
             
             X509Certificate[] proxy = ProxyGenerator.generate(options, pemCredential.getKey());
 

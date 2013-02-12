@@ -103,15 +103,15 @@ public class GliteDelegation {
     /** Key size being used. */
     private int m_keySize;
 
-    /**
-     * whether the presence of voms attributes will be required in the incoming certificate chains.
-     */
+    /** whether the presence of voms attributes will be required in the incoming certificate chains. */
     private static boolean requireVomsAttrs = true;
 
-    /**
-     * The voms validator instance used to validate the voms attribute certificates.
-     */
+    /** The voms validator instance used to validate the voms attribute certificates. */
     private static VOMSACValidator vomsValidator = null;
+    
+    /** Whether the new proxies should be limited or not. */
+    private boolean limited = false;
+    
 
     /**
      * Loads the DLGEE properties from the default config file and calls the appropriate constructor.
@@ -154,6 +154,8 @@ public class GliteDelegation {
         }
 
         requireVomsAttrs = dlgeeOpt.isRequireVomsAttributes();
+        
+        limited = dlgeeOpt.isLimited();
 
         // Set the size of the key, if not defined or smaller than the default,
         // use default.
@@ -791,6 +793,9 @@ public class GliteDelegation {
             ProxyType type = info.getProxyType().toProxyType();
             options.setType(type);
             options.setKeyLength(m_keySize);
+            if(limited || info.isLimited()){
+                options.setLimited(limited);
+            }
             proxyCsr = ProxyCSRGenerator.generate(options);
             PKCS10CertificationRequest req = proxyCsr.getCSR();
             privKey = proxyCsr.getPrivateKey();

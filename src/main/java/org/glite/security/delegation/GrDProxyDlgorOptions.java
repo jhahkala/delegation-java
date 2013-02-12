@@ -36,7 +36,59 @@ public class GrDProxyDlgorOptions {
     private String issuerKeyFile = null;
     private String issuerPass = null;
     private String issuerProxyFile = null;
+    private boolean limited = false;
     private String delegationStorage = null;
+    private String tracingFrom = null;
+    private String tracingTo = null;
+
+    /**
+     * Gets the String that is used as the URL to identify where the delegation originated from.
+     * @return the tracingFrom
+     */
+    public String getTracingFrom() {
+        return tracingFrom;
+    }
+
+    /**
+     * Sets the String that is used as the URL to identify where the delegation originated from.
+     * @param tracingFrom the tracingFrom to set
+     */
+    public void setTracingFrom(String tracingFrom) {
+        this.tracingFrom = tracingFrom;
+    }
+
+    /**
+     * Gets the String that is used as the URL to identify where the delegation is targeted to.
+     * @return the tracingTo
+     */
+    public String getTracingTo() {
+        return tracingTo;
+    }
+
+    /**
+     * Sets the String that is used as the URL to identify where the delegation is targeted to.
+     * @param tracingTo the tracingTo to set
+     */
+    public void setTracingTo(String tracingTo) {
+        this.tracingTo = tracingTo;
+    }
+
+    /**
+     * Returns whether the new proxy should be limited or not.
+     * @return the limited
+     */
+    public boolean isLimited() {
+        return limited;
+    }
+
+    /**
+     * Sets whether the new proxy should be limited or not.
+     * 
+     * @param limited the limited to set
+     */
+    public void setLimited(boolean limited) {
+        this.limited = limited;
+    }
 
     /**
      * Constructor of class
@@ -89,6 +141,12 @@ public class GrDProxyDlgorOptions {
         this.issuerPass = props.getProperty("issuerPass");
         this.issuerProxyFile = props.getProperty("issuerProxyFile");
         this.delegationStorage = props.getProperty("delegationStorage");
+        String limitedString = props.getProperty("limitedProxy");
+        if(limitedString != null){
+            this.limited = Boolean.parseBoolean(limitedString);
+        }
+        this.tracingFrom = props.getProperty("tracingFrom");
+        this.tracingTo = props.getProperty("tracingTo");
     }
 
     /**

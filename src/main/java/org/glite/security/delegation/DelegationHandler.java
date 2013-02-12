@@ -146,11 +146,11 @@ public class DelegationHandler {
                 options.setProxyTracingSubject(dlgorOpt.getTracingTo());
             }
             
-            X509Certificate[] proxy = ProxyGenerator.generate(options, pemCredential.getKey());
+            m_certs = ProxyGenerator.generate(options, pemCredential.getKey());
 
             ByteArrayOutputStream stream = new ByteArrayOutputStream();
 
-            CertificateUtils.saveCertificateChain(stream, proxy, Encoding.PEM);
+            CertificateUtils.saveCertificateChain(stream, m_certs, Encoding.PEM);
 
             strX509CertChain = stream.toString();
         } catch (Exception e) {

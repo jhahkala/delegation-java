@@ -789,7 +789,6 @@ public class GliteDelegation {
         String privateKeyString = null;
         try {
             ProxyCertificateOptions options = new ProxyCertificateOptions(certs);
-            // options..setPublicKey(keyPair.getPublic());
             ProxyChainInfo info = new ProxyChainInfo(certs);
             ProxyType type = info.getProxyType().toProxyType();
             options.setType(type);

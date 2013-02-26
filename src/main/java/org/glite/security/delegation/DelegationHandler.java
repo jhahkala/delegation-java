@@ -143,12 +143,12 @@ public class DelegationHandler {
                 options.setLimited(true);
             }
             
-            if(dlgorOpt.getTracingFrom() != null){
-                options.setProxyTracingIssuer(dlgorOpt.getTracingFrom());
+            if(dlgorOpt.getTracingIssuer() != null){
+                options.setProxyTracingIssuer(dlgorOpt.getTracingIssuer());
             }
             
-            if(dlgorOpt.getTracingTo() != null){
-                options.setProxyTracingSubject(dlgorOpt.getTracingTo());
+            if(dlgorOpt.getTracingSubject() != null){
+                options.setProxyTracingSubject(dlgorOpt.getTracingSubject());
             }
             
             m_certs = ProxyGenerator.generate(options, pemCredential.getKey());

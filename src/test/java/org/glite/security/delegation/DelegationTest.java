@@ -232,8 +232,8 @@ public class DelegationTest extends TestCase {
         // client side new proxy signing
         GrDProxyDlgorOptions dopts = new GrDProxyDlgorOptions();
         dopts.setDlgorCertFile(proxyfile);
-        dopts.setTracingFrom(tracingFrom);
-        dopts.setTracingTo(tracingTo);
+        dopts.setTracingIssuer(tracingFrom);
+        dopts.setTracingSubject(tracingTo);
 
         DelegationHandler handler = new DelegationHandler(req, delegationId, dopts);
         String certString = handler.getPEMProxyCertificate();

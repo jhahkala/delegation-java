@@ -38,39 +38,39 @@ public class GrDProxyDlgorOptions {
     private String issuerProxyFile = null;
     private boolean limited = false;
     private String delegationStorage = null;
-    private String tracingFrom = null;
-    private String tracingTo = null;
+    private String tracingIssuer = null;
+    private String tracingSubject = null;
 
     /**
      * Gets the String that is used as the URL to identify where the delegation originated from.
      * @return the tracingFrom
      */
-    public String getTracingFrom() {
-        return tracingFrom;
+    public String getTracingIssuer() {
+        return tracingIssuer;
     }
 
     /**
      * Sets the String that is used as the URL to identify where the delegation originated from.
      * @param tracingFrom the tracingFrom to set
      */
-    public void setTracingFrom(String tracingFrom) {
-        this.tracingFrom = tracingFrom;
+    public void setTracingIssuer(String tracingFrom) {
+        this.tracingIssuer = tracingFrom;
     }
 
     /**
      * Gets the String that is used as the URL to identify where the delegation is targeted to.
      * @return the tracingTo
      */
-    public String getTracingTo() {
-        return tracingTo;
+    public String getTracingSubject() {
+        return tracingSubject;
     }
 
     /**
      * Sets the String that is used as the URL to identify where the delegation is targeted to.
      * @param tracingTo the tracingTo to set
      */
-    public void setTracingTo(String tracingTo) {
-        this.tracingTo = tracingTo;
+    public void setTracingSubject(String tracingTo) {
+        this.tracingSubject = tracingTo;
     }
 
     /**
@@ -145,8 +145,8 @@ public class GrDProxyDlgorOptions {
         if(limitedString != null){
             this.limited = Boolean.parseBoolean(limitedString);
         }
-        this.tracingFrom = props.getProperty("tracingFrom");
-        this.tracingTo = props.getProperty("tracingTo");
+        this.tracingIssuer = props.getProperty("tracingFrom");
+        this.tracingSubject = props.getProperty("tracingTo");
     }
 
     /**
